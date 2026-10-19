@@ -27,7 +27,7 @@ Městská hra pro 4–6 hráčů v reálných ulicích. Výchozí město: **Šum
 - **Fantom vyhraje**, když ho do konce 45 minut honičky nikdo nedopadne.
 
 ## Omezení
-- Herní území: centrum a sever Šumperka, asi 2,6 km². Hranice vede po ulicích Reissova, J. z Poděbrad, nám. Republiky, Havlíčkova, Husovo nám., Dr. E. Beneše, Masarykovo nám., Jeremenkova, Lidická a Jesenická, pak po lesních cestách kolem Holubího vrchu a Vyhlídky a krátce přes pole zpět na Reissovu. Přesně je vyznačená na mapě ve hře.
+- Herní území: centrum a sever Šumperka, asi 2,6 km². Hranice vede po ulicích Reissova, J. z Poděbrad, nám. Republiky, Havlíčkova, Husovo nám., Dr. E. Beneše, Masarykovo nám., Jeremenkova, Lidická a Jesenická, pak po lesních cestách kolem Holubího vrchu a Vyhlídky a krátce přes pole zpět na Reissovu. Přesně je vyznačená na mapě ve hře. Kruhové objezdy na hranici patří celé do herního území.
 - Hraje se jen uvnitř vyznačeného území.
 - Pohyb jen pěšky, žádná doprava (kolo, autobus, auto…). Hra to nehlídá, je to věc férovosti.
 - Telefon musí mít po celou dobu hry otevřenou hru a **rozsvícený displej**, jinak se poloha neaktualizuje. Doporučujeme powerbanku.
