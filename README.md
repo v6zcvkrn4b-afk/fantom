@@ -1,6 +1,8 @@
 # Fantom
 
-Mobilní hra v prohlížeči: tým detektivů se snaží dopadnout tajemného Fantoma.
+Městská hra v reálných ulicích: tým detektivů se snaží dopadnout Fantoma, jehož poloha se ukazuje jen každé 4 minuty.
+
+Pravidla: [PRAVIDLA.md](PRAVIDLA.md) · Plán vývoje: [PLAN.md](PLAN.md)
 
 **Hrát:** https://v6zcvkrn4b-afk.github.io/fantom/
 
@@ -12,14 +14,13 @@ Každá změna nahraná (push) do větve `main` se do minuty objeví na adrese v
 
 ## Struktura
 ```
-index.html            vstupní stránka hry
+index.html            vstupní stránka
 manifest.webmanifest  nastavení pro „Přidat na plochu“ v telefonu
-css/style.css         styl stránky (celá obrazovka, bez zoomu)
-js/main.js            nastavení herního enginu Phaser 3
-js/constants.js       rozměry herní plochy
-js/scenes/            jednotlivé obrazovky hry (načítání, menu, hra)
-assets/images/        obrázky a sprity
-assets/audio/         hudba a zvuky
-assets/fonts/         písma
+css/style.css         vzhled
+js/main.js            spuštění aplikace (mapa, poloha)
+js/config.js          pravidla hry (časy) a hranice herního území
+js/gps.js             sledování polohy telefonu
+js/geo.js             výpočty nad mapou (je hráč v území?)
+js/wakelock.js        drží displej rozsvícený
 icons/                ikona aplikace
 ```

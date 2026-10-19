@@ -1,7 +1,7 @@
 {
   "name": "Fantom",
   "short_name": "Fantom",
-  "description": "Dopadni Fantoma! Detektivní mobilní hra.",
+  "description": "Dopadni Fantoma! Městská hra pro detektivy v ulicích.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",
