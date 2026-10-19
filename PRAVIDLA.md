@@ -4,7 +4,7 @@ Městská hra pro 4–6 hráčů v reálných ulicích.
 
 ## Mapy
 - **Šumperk:** centrum a sever města, asi 2,6 km².
-- **Brno – Královo Pole:** hustá zástavba Králova Pole, kampus VUT Pod Palackého vrchem (FSI, FEKT, FP, FCH) a FIT na Božetěchově, asi 2,5 km². Hranice vede po ulicích Purkyňova, Hudcova, Palackého třída, Dalimilova, Božetěchova, Mojmírovo nám., Košinova, Dobrovského, Hradecká, Královopolská, Technická, U vodárny a Kolejní.
+- **Brno:** Královo Pole a kampusy VUT (Pod Palackého vrchem včetně Fakulty chemické, FIT na Božetěchově), asi 2,5 km². Hranice vede po cestě podél vozovny z Purkyňovy na Hudcovu, Palackého třídě, Dalimilově, Božetěchově, Mojmírově nám., Košinově, Dobrovského, Hradecké, Královopolské, Technické, U vodárny, pěšinách západně od hřiště a po Kolejní.
 
 Mapa se vybere automaticky podle polohy toho, kdo hru zakládá (mapa, ve které je, jinak nejbližší). Připojení hráči hrají na mapě dané hry. V nastavení hry je mapa uvedená jen pro informaci. Mapu jde vynutit v adrese, např. `…/fantom/?mapa=brno` nebo `?mapa=sumperk`.
 
@@ -32,7 +32,7 @@ Mapa se vybere automaticky podle polohy toho, kdo hru zakládá (mapa, ve které
 - **Fantom vyhraje**, když ho do konce 45 minut honičky nikdo nedopadne.
 
 ## Omezení
-- Herní území: centrum a sever Šumperka, asi 2,6 km². Hranice vede po ulicích Reissova, J. z Poděbrad, nám. Republiky, Havlíčkova, Husovo nám., Dr. E. Beneše, Masarykovo nám., Jeremenkova, Lidická a Jesenická, pak po lesních cestách kolem Holubího vrchu a Vyhlídky a krátce přes pole zpět na Reissovu. Přesně je vyznačená na mapě ve hře. Kruhové objezdy na hranici patří celé do herního území.
+- Herní území: centrum a sever Šumperka, asi 2,6 km². Hranice vede po ulicích Reissova, J. z Poděbrad, nám. Republiky, Havlíčkova, Husovo nám., Dr. E. Beneše, Masarykovo nám., Jeremenkova, Lidická a Jesenická, pak po lesních cestách kolem Holubího vrchu a Vyhlídky a krátce přes pole zpět na Reissovu. Přesně je vyznačená na mapě ve hře. Kruhový objezd na J. z Poděbrad (Šumperk) patří celý do herního území; přes objezd na Žerotínově (Šumperk) a Hradecká × Dobrovského (Brno) vede hranice rovně po jejich horním okraji.
 - Hraje se jen uvnitř vyznačeného území.
 - Pohyb jen pěšky, žádná doprava (kolo, autobus, auto…). Hra to nehlídá, je to věc férovosti.
 - Telefon musí mít po celou dobu hry otevřenou hru a **rozsvícený displej**, jinak se poloha neaktualizuje. Doporučujeme powerbanku.
