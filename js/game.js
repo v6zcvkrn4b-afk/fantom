@@ -1,6 +1,6 @@
 // Operace se hrou v databázi. Struktura jedné hry:
 // games/{kód}/
-//   meta:    { hostUid, status: lobby|running|caught|escaped, times, phantomUid, startedAt, endedAt }
+//   meta:    { hostUid, status: lobby|running|caught|escaped, mapId, times, phantomUid, startedAt, endedAt }
 //   players: { uid: { name, joinedAt } }
 //   reveals: { phantom:    { číslo odhalení: { lat, lng, acc, t, late } },
 //              detectives: { číslo odhalení: { uid: { lat, lng, acc, t, late } } } }
@@ -19,7 +19,7 @@ function randomCode() {
   return String(Math.floor(1000 + Math.random() * 9000));
 }
 
-export async function createGame(uid, name) {
+export async function createGame(uid, name, mapId) {
   for (let attempt = 0; attempt < 10; attempt++) {
     const code = randomCode();
     const existing = await get(gameRef(code, 'meta'));
@@ -27,6 +27,7 @@ export async function createGame(uid, name) {
     await set(gameRef(code, 'meta'), {
       hostUid: uid,
       status: 'lobby',
+      mapId,
       times: TIMES,
       createdAt: serverTimestamp(),
     });

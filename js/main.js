@@ -1,6 +1,5 @@
-import {
-  BOUNDARY, PLAYERS, LIMITS, TIMES,
-} from './config.js';
+import { PLAYERS, LIMITS, TIMES } from './config.js';
+import { pickArea, getArea } from './maps.js';
 import { watchPosition } from './gps.js';
 import { keepScreenOn } from './wakelock.js';
 import { isInside } from './geo.js';
@@ -11,7 +10,6 @@ import {
 import { createWheel } from './wheel.js';
 
 const $ = (id) => document.getElementById(id);
-const view = createMap('map');
 
 // Uložení v telefonu (přezdívka, kód rozehrané hry). Může být nedostupné, proto try/catch.
 const store = {
@@ -26,7 +24,12 @@ const store = {
   },
 };
 
+// Mapa: před hrou podle polohy hráče (naposledy použitá, než se poloha zjistí),
+// ve hře podle toho, na jaké mapě byla hra založena.
+const view = createMap('map', getArea(store.get('map')));
+
 const state = {
+  area: getArea(store.get('map')),
   api: null,            // modul game.js (načte se po připojení k serveru)
   serverNow: Date.now,
   uid: null,
@@ -48,6 +51,7 @@ const isRunning = () => state.game?.meta?.status === 'running';
 watchPosition(
   (fix) => {
     state.fix = fix;
+    if (!state.game) setArea(pickArea(fix.lat, fix.lng));
     view.showMe(fix, isPhantom());
     updateGpsStatus();
     tick();
@@ -58,9 +62,18 @@ watchPosition(
   },
 );
 
+function setArea(area) {
+  if (state.area === area && $('tagline').dataset.map === area.id) return;
+  state.area = area;
+  view.setArea(area);
+  $('tagline').textContent = area.tagline;
+  $('tagline').dataset.map = area.id;
+  updateGpsStatus();
+}
+
 function updateGpsStatus() {
   if (!state.fix) return;
-  const inside = isInside([state.fix.lat, state.fix.lng], BOUNDARY);
+  const inside = isInside([state.fix.lat, state.fix.lng], state.area.boundary);
   $('status').classList.toggle('error', !inside);
   $('status').textContent = `${inside ? 'V herním území' : 'MIMO území!'} · přesnost ${Math.round(state.fix.accuracy)} m`;
   $('warn').hidden = !(isRunning() && !inside);
@@ -145,6 +158,7 @@ function showHome(error) {
   $('back-result').hidden = true;
   $('warn').hidden = true;
   renderMarkers();
+  setArea(state.fix ? pickArea(state.fix.lat, state.fix.lng) : state.area);
   showStep('start', error);
 }
 
@@ -200,7 +214,8 @@ $('name-next').addEventListener('click', () => busy($('name-next'), async () => 
   }
   store.set('name', name);
   if (home.mode === 'create') {
-    openGame(await state.api.createGame(state.uid, name));
+    store.set('map', state.area.id);
+    openGame(await state.api.createGame(state.uid, name, state.area.id));
   } else {
     await state.api.joinGame(home.code, state.uid, name);
     openGame(home.code);
@@ -227,6 +242,7 @@ function openGame(code) {
       return;
     }
     state.game = game;
+    setArea(getArea(game.meta.mapId));
     render();
   });
 }
@@ -331,6 +347,14 @@ function buildSettings(readOnly) {
   title.className = 'set-title';
   title.textContent = readOnly ? 'Nastavení hry (určuje zakladatel ★)' : 'Nastavení hry';
   box.append(title);
+  // Mapa je jen pro informaci – vybírá se podle polohy zakladatele při založení hry
+  const mapRow = document.createElement('div');
+  mapRow.className = 'set-row static';
+  const mapLabel = document.createElement('span');
+  mapLabel.textContent = 'Mapa';
+  const mapValue = document.createElement('strong');
+  mapRow.append(mapLabel, mapValue);
+  box.append(mapRow);
   const rows = {};
   const t0 = normalizeTimes(state.game.meta.times);
 
@@ -445,6 +469,7 @@ function buildSettings(readOnly) {
     code: state.code,
     readOnly,
     update(t) {
+      mapValue.textContent = getArea(state.game.meta.mapId).name;
       rows.headStart.value.textContent = formatMinutes(t.headStartMin);
       rows.chase.value.textContent = formatMinutes(t.chaseMin);
       rows.phantomEvery.value.textContent = `${t.phantomEveryMin} min`;
@@ -681,7 +706,7 @@ $('caught').addEventListener('click', async () => {
 $('show-map').addEventListener('click', () => {
   state.reviewing = true;
   render();
-  view.map.fitBounds(BOUNDARY, { padding: [20, 20] });
+  view.fitArea();
 });
 
 $('back-result').addEventListener('click', () => {

@@ -1,12 +1,10 @@
 // Mapa: herní území, vlastní živá poloha a značky hráčů z odhalení.
-import { BOUNDARY } from './config.js';
-
 const RED = '#dc2626';
 const DETECTIVE = '#dc2626'; // detektivové červeně
 const PHANTOM = '#111111';   // Fantom černě
 
-export function createMap(elementId) {
-  const map = L.map(elementId, { zoomControl: false }).fitBounds(BOUNDARY, { padding: [20, 20] });
+export function createMap(elementId, area) {
+  const map = L.map(elementId, { zoomControl: false });
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; přispěvatelé <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -14,14 +12,28 @@ export function createMap(elementId) {
 
   // Vše mimo herní území je „za červeným sklem“: obdélník přes celý svět s vyříznutým územím
   const WORLD = [[-90, -180], [-90, 180], [90, 180], [90, -180]];
-  L.polygon([WORLD, BOUNDARY], { stroke: false, fillColor: RED, fillOpacity: 0.3, interactive: false }).addTo(map);
-  L.polygon(BOUNDARY, { color: RED, weight: 4, fill: false, interactive: false }).addTo(map);
+  const zone = L.layerGroup().addTo(map);
+  let currentArea = null;
+
+  function setArea(next) {
+    if (currentArea === next) return;
+    currentArea = next;
+    zone.clearLayers();
+    L.polygon([WORLD, next.boundary], { stroke: false, fillColor: RED, fillOpacity: 0.3, interactive: false }).addTo(zone);
+    L.polygon(next.boundary, { color: RED, weight: 4, fill: false, interactive: false }).addTo(zone);
+    map.fitBounds(next.boundary, { padding: [20, 20] });
+  }
+  setArea(area);
 
   const players = L.layerGroup().addTo(map);
   let me = null;
 
   return {
     map,
+    setArea,
+    fitArea() {
+      if (currentArea) map.fitBounds(currentArea.boundary, { padding: [20, 20] });
+    },
 
     // Vlastní živá poloha; barva podle role
     showMe(fix, isPhantom) {

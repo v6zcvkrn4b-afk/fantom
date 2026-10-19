@@ -593,3 +593,12 @@ html, body {
   0%, 30% { transform: rotate(-90deg); }
   60%, 100% { transform: rotate(0deg); }
 }
+
+/* Informativní řádek nastavení (mapa) */
+.set-row.static {
+  border-bottom: 1px solid var(--line);
+}
+
+.set-row.static strong {
+  color: var(--text);
+}

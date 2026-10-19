@@ -1,6 +1,12 @@
 # Fantom – pravidla hry
 
-Městská hra pro 4–6 hráčů v reálných ulicích. Výchozí město: **Šumperk**.
+Městská hra pro 4–6 hráčů v reálných ulicích.
+
+## Mapy
+- **Šumperk:** centrum a sever města, asi 2,6 km².
+- **Brno – Královo Pole:** hustá zástavba Králova Pole, kampus VUT Pod Palackého vrchem (FSI, FEKT, FP, FCH) a FIT na Božetěchově, asi 2,5 km². Hranice vede po ulicích Purkyňova, Hudcova, Palackého třída, Dalimilova, Božetěchova, Mojmírovo nám., Košinova, Dobrovského, Hradecká, Královopolská, Technická, U vodárny a Kolejní.
+
+Mapa se vybere automaticky podle polohy toho, kdo hru zakládá (mapa, ve které je, jinak nejbližší). Připojení hráči hrají na mapě dané hry. V nastavení hry je mapa uvedená jen pro informaci.
 
 ## Role
 - **Fantom** (1 hráč) utíká a skrývá se.
