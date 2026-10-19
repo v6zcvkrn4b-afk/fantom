@@ -111,6 +111,21 @@ function showScreen(name) {
   for (const id of ['home', 'lobby', 'result']) $(id).hidden = id !== name;
 }
 
+// Úvod má kroky: 'start' (výběr) → 'code' (jen při připojení) → 'name'
+const home = { mode: 'create', code: null };
+
+function showStep(step, error) {
+  for (const s of ['start', 'code', 'name']) $(`step-${s}`).hidden = s !== step;
+  $('home-error').hidden = !error;
+  $('home-error').textContent = error || '';
+  if (step === 'name') {
+    if (!$('name').value) $('name').value = store.get('name') || '';
+    $('name-next').textContent = home.mode === 'create' ? 'Založit hru' : 'Připojit se';
+    $('name').focus();
+  }
+  if (step === 'code') $('code').focus();
+}
+
 function showHome(error) {
   state.game = null;
   showScreen('home');
@@ -119,9 +134,7 @@ function showHome(error) {
   $('back-result').hidden = true;
   $('warn').hidden = true;
   renderMarkers();
-  if (!$('name').value) $('name').value = store.get('name') || '';
-  $('home-error').hidden = !error;
-  $('home-error').textContent = error || '';
+  showStep('start', error);
 }
 
 function homeError(message) {
@@ -129,19 +142,9 @@ function homeError(message) {
   $('home-error').hidden = false;
 }
 
-function readName() {
-  const name = $('name').value.trim().slice(0, 20);
-  if (!name) {
-    homeError('Napiš svou přezdívku.');
-    return null;
-  }
-  store.set('name', name);
-  return name;
-}
-
-async function withButtons(fn) {
-  const buttons = [$('create'), $('join')];
-  buttons.forEach((b) => { b.disabled = true; });
+// Spustí akci se zablokovanými tlačítky a případnou chybu ukáže pod nimi
+async function busy(button, fn) {
+  button.disabled = true;
   $('home-error').hidden = true;
   try {
     if (!state.api) throw new Error('ještě se připojuji k serveru');
@@ -151,27 +154,54 @@ async function withButtons(fn) {
       ? err.message
       : `Něco se nepovedlo (${err?.code || err?.message || err}). Zkus to znovu.`);
   } finally {
-    buttons.forEach((b) => { b.disabled = false; });
+    button.disabled = false;
   }
 }
 
-$('create').addEventListener('click', () => withButtons(async () => {
-  const name = readName();
-  if (!name) return;
-  openGame(await state.api.createGame(state.uid, name));
-}));
+$('go-create').addEventListener('click', () => {
+  home.mode = 'create';
+  showStep('name');
+});
 
-$('join').addEventListener('click', () => withButtons(async () => {
-  const name = readName();
-  if (!name) return;
+$('go-join').addEventListener('click', () => {
+  home.mode = 'join';
+  showStep('code');
+});
+
+$('code-next').addEventListener('click', () => busy($('code-next'), async () => {
   const code = $('code').value.trim();
   if (!/^\d{4}$/.test(code)) {
     homeError('Kód hry má 4 číslice.');
     return;
   }
-  await state.api.joinGame(code, state.uid, name);
-  openGame(code);
+  // Ověří kód hned, ať se nepíše přezdívka zbytečně
+  const alreadyIn = await state.api.checkJoinable(code, state.uid);
+  home.code = code;
+  if (alreadyIn) openGame(code);
+  else showStep('name');
 }));
+
+$('name-next').addEventListener('click', () => busy($('name-next'), async () => {
+  const name = $('name').value.trim().slice(0, 20);
+  if (!name) {
+    homeError('Napiš svou přezdívku.');
+    return;
+  }
+  store.set('name', name);
+  if (home.mode === 'create') {
+    openGame(await state.api.createGame(state.uid, name));
+  } else {
+    await state.api.joinGame(home.code, state.uid, name);
+    openGame(home.code);
+  }
+}));
+
+$('name-back').addEventListener('click', () => showStep(home.mode === 'join' ? 'code' : 'start'));
+document.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => showStep(b.dataset.back)));
+
+// Enter na klávesnici = pokračovat
+$('code').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('code-next').click(); });
+$('name').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('name-next').click(); });
 
 function openGame(code) {
   if (state.unwatch) state.unwatch();
@@ -262,38 +292,34 @@ function renderLobby() {
   }
 
   const t = normalizeTimes(meta.times);
-  if (isHost) {
-    if (!settingsUi || settingsUi.code !== state.code) settingsUi = buildSettings();
-    settingsUi.update(t);
+  // Nastavení vidí všichni stejně, měnit ho může jen zakladatel
+  if (!settingsUi || settingsUi.code !== state.code || settingsUi.readOnly !== !isHost) {
+    settingsUi = buildSettings(!isHost);
   }
-  $('settings').hidden = !isHost;
-  let note = isHost ? '' : `${describeTimes(t)} `;
-  if (phantomChosen && detectives < PLAYERS.minDetectives) {
-    note += `Doporučeno je ${PLAYERS.minDetectives}–${PLAYERS.maxDetectives} detektivů (teď ${detectives}).`;
-  }
-  $('lobby-times').textContent = note.trim();
+  settingsUi.update(t);
+  $('settings').hidden = false;
+  $('lobby-times').textContent = phantomChosen && detectives < PLAYERS.minDetectives
+    ? `Doporučeno je ${PLAYERS.minDetectives}–${PLAYERS.maxDetectives} detektivů (teď ${detectives}).`
+    : '';
 
   $('start').hidden = !isHost;
   $('start').disabled = !(phantomChosen && detectives >= 1 && detectives <= PLAYERS.maxDetectives);
   $('lobby-wait').hidden = isHost;
 }
 
-function describeTimes(t) {
-  const det = t.detectiveVisibility === 'none'
-    ? 'detektivové se neukazují'
-    : `detektivové se ukazují ${{ all: "všem", detectives: "jen sobě navzájem", phantom: "jen Fantomovi" }[t.detectiveVisibility]} každých ${t.detectiveEveryMin} min`;
-  const names = t.detectiveVisibility === 'none' ? '' : (t.showDetectiveNames ? ' se jmény' : ' anonymně');
-  return `Náskok ${formatMinutes(t.headStartMin)} · hra ${formatMinutes(t.chaseMin)} · Fantom se ukazuje každé ${t.phantomEveryMin} min · ${det}${names}.`;
-}
-
-// ---------- Nastavení hry (jen zakladatel, v čekárně) ----------
+// ---------- Nastavení hry (v čekárně) ----------
 // Vytvoří se jednou pro hru; při změnách z databáze se jen aktualizují hodnoty,
-// aby se válečky nepřekreslovaly pod prstem.
+// aby se válečky nepřekreslovaly pod prstem. Ostatní hráči ho vidí jen pro čtení.
 let settingsUi = null;
 
-function buildSettings() {
+function buildSettings(readOnly) {
   const box = $('settings');
   box.replaceChildren();
+  box.classList.toggle('readonly', readOnly);
+  const title = document.createElement('div');
+  title.className = 'set-title';
+  title.textContent = readOnly ? 'Nastavení hry (určuje zakladatel ★)' : 'Nastavení hry';
+  box.append(title);
   const rows = {};
   const t0 = normalizeTimes(state.game.meta.times);
 
@@ -320,6 +346,7 @@ function buildSettings() {
     });
     // Ťuknutím se váleček rozbalí, ostatní se sbalí (jako v Nastavení na iPhonu)
     row.addEventListener('click', () => {
+      if (readOnly) return;
       const open = picker.hidden;
       for (const r of Object.values(rows)) {
         r.picker.hidden = true;
@@ -398,12 +425,14 @@ function buildSettings() {
   reset.className = 'link';
   reset.textContent = 'Obnovit výchozí nastavení';
   reset.addEventListener('click', () => save(TIMES));
+  reset.hidden = readOnly;
   box.append(reset);
 
   const setWheel = (w, v) => { if (w.value !== v) w.set(v); };
 
   return {
     code: state.code,
+    readOnly,
     update(t) {
       rows.headStart.value.textContent = formatMinutes(t.headStartMin);
       rows.chase.value.textContent = formatMinutes(t.chaseMin);

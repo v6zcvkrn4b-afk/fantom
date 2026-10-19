@@ -49,18 +49,31 @@
   <button id="locate" type="button" aria-label="Moje poloha">◎</button>
   <button id="caught" type="button" hidden>Byl jsem dopaden</button>
 
-  <!-- Úvodní obrazovka -->
+  <!-- Úvodní obrazovka: kroky výběr → (kód) → přezdívka -->
   <section id="home" class="screen" hidden>
     <div class="card">
       <h1>FANTOM</h1>
-      <p class="muted">Dopadněte Fantoma v ulicích Šumperka.</p>
-      <label for="name">Tvoje přezdívka</label>
-      <input id="name" type="text" maxlength="20" autocomplete="nickname" placeholder="např. Sherlock">
-      <button id="create" type="button" class="primary">Založit novou hru</button>
-      <div class="divider"><span>nebo</span></div>
-      <label for="code">Kód hry</label>
-      <input id="code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="1234">
-      <button id="join" type="button">Připojit se ke hře</button>
+      <p class="muted center">Dopadněte Fantoma v ulicích Šumperka.</p>
+
+      <div id="step-start">
+        <button id="go-create" type="button" class="primary">Založit novou hru</button>
+        <button id="go-join" type="button">Připojit se ke hře</button>
+      </div>
+
+      <div id="step-code" hidden>
+        <label for="code">Kód hry</label>
+        <input id="code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="1234" autocomplete="off">
+        <button id="code-next" type="button" class="primary">Pokračovat</button>
+        <button type="button" class="link back" data-back="start">Zpět</button>
+      </div>
+
+      <div id="step-name" hidden>
+        <label for="name">Tvoje přezdívka</label>
+        <input id="name" type="text" maxlength="20" autocomplete="nickname" placeholder="např. Sherlock">
+        <button id="name-next" type="button" class="primary"></button>
+        <button id="name-back" type="button" class="link back">Zpět</button>
+      </div>
+
       <p id="home-error" class="error" hidden></p>
     </div>
   </section>

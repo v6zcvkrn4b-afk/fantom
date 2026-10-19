@@ -537,3 +537,26 @@ html, body {
   background: rgba(251, 191, 36, 0.15) !important;
   color: var(--accent) !important;
 }
+
+/* Nastavení pro připojené hráče: stejné, jen nejde měnit */
+#settings.readonly .set-row,
+#settings.readonly .segmented button {
+  pointer-events: none;
+}
+
+#settings.readonly .segmented button:not(.active) {
+  opacity: 0.35;
+}
+
+#settings.readonly .set-row strong {
+  color: var(--text);
+}
+
+.set-title {
+  margin: 16px 0 4px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}

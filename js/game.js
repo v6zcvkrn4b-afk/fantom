@@ -36,14 +36,20 @@ export async function createGame(uid, name) {
   throw new GameError('Nepodařilo se vytvořit hru, zkus to znovu.');
 }
 
-export async function joinGame(code, uid, name) {
+// Ověří, že se ke hře dá připojit. Vrací true, když v ní hráč už je (návrat do hry).
+export async function checkJoinable(code, uid) {
   const snap = await get(gameRef(code));
-  if (!snap.exists()) throw new GameError('Hra s tímto kódem neexistuje.');
+  if (!snap.exists() || !snap.val().meta) throw new GameError('Hra s tímto kódem neexistuje.');
   const game = snap.val();
   const players = game.players || {};
-  if (players[uid]) return; // už ve hře je (návrat po obnovení stránky)
+  if (players[uid]) return true;
   if (game.meta.status !== 'lobby') throw new GameError('Tahle hra už běží nebo skončila.');
   if (Object.keys(players).length >= PLAYERS.maxDetectives + 1) throw new GameError('Hra je plná.');
+  return false;
+}
+
+export async function joinGame(code, uid, name) {
+  if (await checkJoinable(code, uid)) return;
   await set(gameRef(code, `players/${uid}`), { name, joinedAt: serverTimestamp() });
 }
 
