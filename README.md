@@ -14,7 +14,8 @@ Každá změna nahraná (push) do větve `main` se do minuty objeví na adrese v
 
 ## Struktura
 ```
-index.html            vstupní stránka
+index.html            vstupní stránka (hra)
+mapa.html             jen prohlížení map a hranic (bez hry)
 manifest.webmanifest  nastavení pro „Přidat na plochu“ v telefonu
 css/style.css         vzhled
 js/main.js            obrazovky a průběh hry

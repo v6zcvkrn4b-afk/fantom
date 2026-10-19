@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Fantom – mapy</title>
+  <meta name="theme-color" content="#0b0d1a">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    #switch {
+      position: absolute;
+      top: calc(env(safe-area-inset-top) + 56px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      border-radius: 999px;
+      background: var(--panel);
+    }
+
+    #switch button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    #switch button.active {
+      background: var(--accent);
+      color: #111;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <header id="topbar">
+    <span class="title">FANTOM · mapy</span>
+    <span id="status"></span>
+  </header>
+  <div id="switch"></div>
+  <button id="locate" type="button" aria-label="Moje poloha">◎</button>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script type="module">
+    // Jen prohlížení herních území, bez hry a bez serveru.
+    import { MAPS, getArea } from './js/maps.js';
+    import { createMap } from './js/mapview.js';
+    import { watchPosition } from './js/gps.js';
+    import { isInside } from './js/geo.js';
+
+    const params = new URLSearchParams(window.location.search);
+    let area = getArea(params.get('mapa'));
+    const view = createMap('map', area);
+    let fix = null;
+
+    const sw = document.getElementById('switch');
+    const buttons = Object.values(MAPS).map((m) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = m.name;
+      b.addEventListener('click', () => select(m));
+      sw.append(b);
+      return [m, b];
+    });
+
+    function select(m) {
+      area = m;
+      view.setArea(m);
+      buttons.forEach(([mm, b]) => b.classList.toggle('active', mm === m));
+      history.replaceState(null, '', `?mapa=${m.id}`);
+      status();
+    }
+
+    function status() {
+      const el = document.getElementById('status');
+      if (!fix) { el.textContent = area.name; return; }
+      const inside = isInside([fix.lat, fix.lng], area.boundary);
+      el.classList.toggle('error', !inside);
+      el.textContent = inside ? 'Jsi v herním území' : 'Jsi mimo herní území';
+    }
+
+    watchPosition((f) => { fix = f; view.showMe(f, false); status(); }, () => {});
+    document.getElementById('locate').addEventListener('click', () => view.centerOnMe());
+    select(area);
+  </script>
+</body>
+</html>
