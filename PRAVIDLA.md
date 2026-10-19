@@ -27,10 +27,10 @@ Městská hra pro 4–6 hráčů v reálných ulicích. Výchozí město: **Šum
 - **Fantom vyhraje**, když ho do konce 45 minut honičky nikdo nedopadne.
 
 ## Omezení
+- Herní území: centrum a sever Šumperka, asi 2,6 km² (1,8 × 2,2 km). Přesná hranice je na mapě ve hře.
 - Hraje se jen uvnitř vyznačeného území.
 - Pohyb jen pěšky, žádná doprava (kolo, autobus, auto…). Hra to nehlídá, je to věc férovosti.
 - Telefon musí mít po celou dobu hry otevřenou hru a **rozsvícený displej**, jinak se poloha neaktualizuje. Doporučujeme powerbanku.
 
 ## Otevřené otázky
-- Přesná hranice herního území v Šumperku.
 - Co se stane, když Fantom opustí území (návrh: jeho poloha se detektivům ukáže okamžitě).

@@ -1,4 +1,4 @@
-import { CITY, BOUNDARY } from './config.js';
+import { BOUNDARY } from './config.js';
 import { watchPosition } from './gps.js';
 import { keepScreenOn } from './wakelock.js';
 import { isInside } from './geo.js';
@@ -6,7 +6,7 @@ import { isInside } from './geo.js';
 // Zatím jen testovací obrazovka: mapa, hranice území a vlastní poloha z GPS.
 const statusEl = document.getElementById('status');
 
-const map = L.map('map', { zoomControl: false }).setView(CITY.center, CITY.zoom);
+const map = L.map('map', { zoomControl: false }).fitBounds(BOUNDARY, { padding: [20, 20] });
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; přispěvatelé <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
