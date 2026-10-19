@@ -26,10 +26,11 @@ const store = {
 
 // Mapa: před hrou podle polohy hráče (naposledy použitá, než se poloha zjistí),
 // ve hře podle toho, na jaké mapě byla hra založena.
-const view = createMap('map', getArea(store.get('map')));
+const startArea = getArea(new URLSearchParams(window.location.search).get('mapa') || store.get('map'));
+const view = createMap('map', startArea);
 
 const state = {
-  area: getArea(store.get('map')),
+  area: startArea,
   api: null,            // modul game.js (načte se po připojení k serveru)
   serverNow: Date.now,
   uid: null,
@@ -51,7 +52,7 @@ const isRunning = () => state.game?.meta?.status === 'running';
 watchPosition(
   (fix) => {
     state.fix = fix;
-    if (!state.game) setArea(pickArea(fix.lat, fix.lng));
+    if (!state.game) setArea(autoArea());
     view.showMe(fix, isPhantom());
     updateGpsStatus();
     tick();
@@ -61,6 +62,14 @@ watchPosition(
     $('status').textContent = message;
   },
 );
+
+// Mapu jde vynutit v adrese, např. …/fantom/?mapa=brno (na prohlédnutí jiného města)
+const forcedMap = new URLSearchParams(window.location.search).get('mapa');
+
+function autoArea() {
+  if (forcedMap) return getArea(forcedMap);
+  return state.fix ? pickArea(state.fix.lat, state.fix.lng) : state.area;
+}
 
 function setArea(area) {
   if (state.area === area && $('tagline').dataset.map === area.id) return;
@@ -158,7 +167,7 @@ function showHome(error) {
   $('back-result').hidden = true;
   $('warn').hidden = true;
   renderMarkers();
-  setArea(state.fix ? pickArea(state.fix.lat, state.fix.lng) : state.area);
+  setArea(autoArea());
   showStep('start', error);
 }
 
