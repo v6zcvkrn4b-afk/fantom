@@ -26,6 +26,9 @@ export function createMap(elementId, area) {
   setArea(area);
 
   const players = L.layerGroup().addTo(map);
+  // Živá poloha hráče leží nad značkami z odhalení, aby ji nic nezakrylo
+  map.createPane('me');
+  map.getPane('me').style.zIndex = 650;
   let me = null;
 
   return {
@@ -41,8 +44,8 @@ export function createMap(elementId, area) {
       const color = isPhantom ? PHANTOM : DETECTIVE;
       if (!me) {
         me = {
-          ring: L.circle(pos, { radius: fix.accuracy, color, weight: 1, fillOpacity: 0.1, interactive: false }).addTo(map),
-          dot: L.circleMarker(pos, { radius: 9, color: '#fff', weight: 3, fillColor: color, fillOpacity: 1 }).addTo(map),
+          ring: L.circle(pos, { pane: 'me', radius: fix.accuracy, color, weight: 1, fillOpacity: 0.1, interactive: false }).addTo(map),
+          dot: L.circleMarker(pos, { pane: 'me', radius: 9, color: '#fff', weight: 3, fillColor: color, fillOpacity: 1 }).addTo(map),
         };
       } else {
         me.dot.setLatLng(pos).setStyle({ fillColor: color });

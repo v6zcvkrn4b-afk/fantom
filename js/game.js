@@ -9,7 +9,7 @@ import {
   ref, get, set, update, remove, onValue, serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js';
 import { db } from './firebase.js';
-import { TIMES, PLAYERS } from './config.js';
+import { TIMES } from './config.js';
 
 const gameRef = (code, path = '') => ref(db, `games/${code}${path ? '/' + path : ''}`);
 
@@ -44,8 +44,7 @@ export async function checkJoinable(code, uid) {
   const game = snap.val();
   const players = game.players || {};
   if (players[uid]) return true;
-  if (game.meta.status !== 'lobby') throw new GameError('Tahle hra už běží nebo skončila.');
-  if (Object.keys(players).length >= PLAYERS.maxDetectives + 1) throw new GameError('Hra je plná.');
+  if (game.meta.status !== 'lobby') throw new GameError('Tahle hra už běží nebo skončila – připojit se dá jen před startem.');
   return false;
 }
 

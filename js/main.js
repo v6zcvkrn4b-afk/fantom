@@ -335,11 +335,11 @@ function renderLobby() {
   settingsUi.update(t);
   $('settings').hidden = false;
   $('lobby-times').textContent = phantomChosen && detectives < PLAYERS.minDetectives
-    ? `Doporučeno je ${PLAYERS.minDetectives}–${PLAYERS.maxDetectives} detektivů (teď ${detectives}).`
+    ? `Doporučeno je aspoň ${PLAYERS.minDetectives} detektivů (teď ${detectives}).`
     : '';
 
   $('start').hidden = !isHost;
-  $('start').disabled = !(phantomChosen && detectives >= 1 && detectives <= PLAYERS.maxDetectives);
+  $('start').disabled = !(phantomChosen && detectives >= 1);
   $('lobby-wait').hidden = isHost;
 }
 
@@ -653,6 +653,24 @@ function renderMarkers() {
       if (!r) continue;
       const label = (showNames ? player.name : '') + (r.index < dLimit ? ' (starší)' : '');
       markers.push({ lat: r.lat, lng: r.lng, kind: 'detective', label: label.trim() });
+    }
+  }
+
+  // Vlastní poslední odhalené polohy (kde mě naposledy viděli ostatní); živou polohu ukazuje showMe
+  if (!ended) {
+    if (isPhantom()) {
+      const last = latestPhantom(pLimit);
+      if (last) {
+        const prev = latestPhantom(last.index - 1);
+        if (prev) {
+          markers.push({ lat: prev.lat, lng: prev.lng, kind: 'phantom', faded: true, label: 'ty – předtím' });
+          lines.push([[prev.lat, prev.lng], [last.lat, last.lng]]);
+        }
+        markers.push({ lat: last.lat, lng: last.lng, kind: 'phantom', label: 'ty – naposledy viděn' });
+      }
+    } else if (tl && tl.detective) {
+      const mine = latestDetective(state.uid, dLimit);
+      if (mine) markers.push({ lat: mine.lat, lng: mine.lng, kind: 'detective', label: 'ty – naposledy viděn' });
     }
   }
 

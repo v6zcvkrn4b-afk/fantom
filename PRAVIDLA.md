@@ -1,6 +1,6 @@
 # Fantom – pravidla hry
 
-Městská hra pro 4–6 hráčů v reálných ulicích.
+Městská hra v reálných ulicích pro libovolný počet hráčů (doporučeno 1 Fantom a aspoň 3 detektivové).
 
 ## Mapy
 - **Šumperk:** centrum a sever města, asi 2,6 km².
@@ -10,7 +10,7 @@ Mapa se vybere automaticky podle polohy toho, kdo hru zakládá (mapa, ve které
 
 ## Role
 - **Fantom** (1 hráč) utíká a skrývá se.
-- **Detektivové** (3–5 hráčů) ho hledají a snaží se ho dopadnout.
+- **Detektivové** (kolik hráčů se připojí) ho hledají a snaží se ho dopadnout. Připojit se dá jen v čekárně; po spuštění hry už ne.
 
 ## Průběh
 1. Jeden hráč dá **Založit novou hru**, napíše přezdívku a dostane 4místný kód. Ostatní dají **Připojit se ke hře**, zadají kód a pak přezdívku. Bez registrace. V čekárně všichni vidí hráče i nastavení hry; zakladatel nastavení upraví, ťuknutím vybere Fantoma a hru spustí.
@@ -21,8 +21,8 @@ Mapa se vybere automaticky podle polohy toho, kdo hru zakládá (mapa, ve které
 4. Celkem hra trvá 50 minut (5 minut náskok + 45 minut honičky).
 
 ## Co je vidět na mapě
-- **Vlastní poloha:** průběžně a živě.
-- **Detektivové:** jen jejich poloha z posledního odhalení.
+- **Vlastní poloha:** každý hráč vidí svou polohu vždy živě, bez ohledu na nastavení. Navíc vidí, kde ho naposledy viděli ostatní: Fantom své poslední dvě odhalené polohy, detektiv svou poslední odhalenou polohu.
+- **Ostatní detektivové:** jen jejich poloha z posledního odhalení (podle nastavení, komu se ukazují).
 - **Fantom:** jeho poloha z posledního odhalení a z odhalení předtím, takže je vidět směr pohybu.
 - **Hranice herního území:** vyznačená na mapě.
 - **Odpočet do dalšího odhalení a do konce hry.**

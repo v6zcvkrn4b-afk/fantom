@@ -16,7 +16,7 @@ export const LIMITS = {
   everyMin: [1, 30],
 };
 
+// Počet hráčů není omezený; po spuštění hry se už nikdo nepřipojí
 export const PLAYERS = {
   minDetectives: 3,      // doporučené minimum (hru lze spustit i s méně, třeba na zkoušku)
-  maxDetectives: 5,
 };
