@@ -2,13 +2,14 @@
 // games/{kód}/
 //   meta:    { hostUid, status: lobby|running|caught|escaped, times, phantomUid, startedAt, endedAt }
 //   players: { uid: { name, joinedAt } }
-//   reveals: { číslo odhalení: { uid: { lat, lng, acc, t, late } } }
+//   reveals: { phantom:    { číslo odhalení: { lat, lng, acc, t, late } },
+//              detectives: { číslo odhalení: { uid: { lat, lng, acc, t, late } } } }
 // Polohy se zapisují JEN v okamžiku odhalení, takže živé polohy nikdo jiný nevidí.
 import {
   ref, get, set, update, remove, onValue, serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js';
 import { db } from './firebase.js';
-import { TIMES, TEST_TIMES, PLAYERS } from './config.js';
+import { TIMES, PLAYERS } from './config.js';
 
 const gameRef = (code, path = '') => ref(db, `games/${code}${path ? '/' + path : ''}`);
 
@@ -59,16 +60,19 @@ export function setPhantom(code, uid) {
   return update(gameRef(code, 'meta'), { phantomUid: uid });
 }
 
-export function setTestMode(code, on) {
-  return update(gameRef(code, 'meta'), { times: on ? TEST_TIMES : TIMES });
+// Změna nastavení hry v čekárně (jen zakladatel), např. { chaseMin: 60 }
+export function updateTimes(code, changes) {
+  return update(gameRef(code, 'meta/times'), changes);
 }
 
 export function startGame(code) {
   return update(gameRef(code, 'meta'), { status: 'running', startedAt: serverTimestamp() });
 }
 
-export function writeReveal(code, index, uid, fix, late) {
-  return set(gameRef(code, `reveals/${index}/${uid}`), {
+// kind: 'phantom' | 'detective'
+export function writeReveal(code, kind, index, uid, fix, late) {
+  const path = kind === 'phantom' ? `reveals/phantom/${index}` : `reveals/detectives/${index}/${uid}`;
+  return set(gameRef(code, path), {
     lat: fix.lat,
     lng: fix.lng,
     acc: Math.round(fix.accuracy),

@@ -1,9 +1,12 @@
-import { BOUNDARY, PLAYERS, TEST_TIMES } from './config.js';
+import { BOUNDARY, PLAYERS, LIMITS } from './config.js';
 import { watchPosition } from './gps.js';
 import { keepScreenOn } from './wakelock.js';
 import { isInside } from './geo.js';
 import { createMap } from './mapview.js';
-import { phaseAt, formatDuration } from './timing.js';
+import {
+  phaseAt, formatDuration, formatMinutes, normalizeTimes, VISIBILITY,
+} from './timing.js';
+import { createWheel } from './wheel.js';
 
 const $ = (id) => document.getElementById(id);
 const view = createMap('map');
@@ -29,7 +32,7 @@ const state = {
   game: null,
   unwatch: null,
   fix: null,            // poslední poloha z GPS
-  lastRevealSeen: null, // pro upozornění na nové odhalení
+  lastRevealSeen: null, // { phantom, detective } – pro upozornění na nové odhalení
   markersKey: '',
   writing: new Set(),   // odhalení, která právě zapisujeme
   escapeSent: false,
@@ -256,22 +259,137 @@ function renderLobby() {
     list.append(li);
   }
 
-  const t = meta.times;
-  const testMode = t.chaseMin === TEST_TIMES.chaseMin && t.headStartMin === TEST_TIMES.headStartMin;
-  $('test-wrap').hidden = !isHost;
-  $('test-mode').checked = testMode;
-  let note = `${testMode ? 'ZKUŠEBNÍ HRA · ' : ''}Náskok ${t.headStartMin} min · odhalení každé ${t.revealEveryMin} min · honička ${t.chaseMin} min.`;
-  if (phantomChosen && detectives < PLAYERS.minDetectives) {
-    note += ` Doporučeno je ${PLAYERS.minDetectives}–${PLAYERS.maxDetectives} detektivů (teď ${detectives}).`;
+  const t = normalizeTimes(meta.times);
+  if (isHost) {
+    if (!settingsUi || settingsUi.code !== state.code) settingsUi = buildSettings();
+    settingsUi.update(t);
   }
-  $('lobby-times').textContent = note;
+  $('settings').hidden = !isHost;
+  let note = isHost ? '' : `${describeTimes(t)} `;
+  if (phantomChosen && detectives < PLAYERS.minDetectives) {
+    note += `Doporučeno je ${PLAYERS.minDetectives}–${PLAYERS.maxDetectives} detektivů (teď ${detectives}).`;
+  }
+  $('lobby-times').textContent = note.trim();
 
   $('start').hidden = !isHost;
   $('start').disabled = !(phantomChosen && detectives >= 1 && detectives <= PLAYERS.maxDetectives);
   $('lobby-wait').hidden = isHost;
 }
 
-$('test-mode').addEventListener('change', (e) => state.api.setTestMode(state.code, e.target.checked));
+function describeTimes(t) {
+  const det = t.detectiveVisibility === 'none'
+    ? 'detektivové se neukazují'
+    : `detektivové se ukazují ${{ all: "všem", detectives: "jen sobě navzájem", phantom: "jen Fantomovi" }[t.detectiveVisibility]} každých ${t.detectiveEveryMin} min`;
+  return `Náskok ${formatMinutes(t.headStartMin)} · hra ${formatMinutes(t.chaseMin)} · Fantom se ukazuje každé ${t.phantomEveryMin} min · ${det}.`;
+}
+
+// ---------- Nastavení hry (jen zakladatel, v čekárně) ----------
+// Vytvoří se jednou pro hru; při změnách z databáze se jen aktualizují hodnoty,
+// aby se válečky nepřekreslovaly pod prstem.
+let settingsUi = null;
+
+function buildSettings() {
+  const box = $('settings');
+  box.replaceChildren();
+  const rows = {};
+  const t0 = normalizeTimes(state.game.meta.times);
+
+  const save = (changes) => state.api.updateTimes(state.code, changes)
+    .catch((err) => window.alert(`Nastavení se nepodařilo uložit (${err.code || err.message}).`));
+
+  function addPicker(key, label, wheelDefs) {
+    const item = document.createElement('div');
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'set-row';
+    const name = document.createElement('span');
+    name.textContent = label;
+    const value = document.createElement('strong');
+    row.append(name, value);
+    const picker = document.createElement('div');
+    picker.className = 'set-picker';
+    picker.hidden = true;
+    const wheels = wheelDefs.map((def) => {
+      const w = createWheel(def);
+      picker.append(w.el);
+      return w;
+    });
+    // Ťuknutím se váleček rozbalí, ostatní se sbalí (jako v Nastavení na iPhonu)
+    row.addEventListener('click', () => {
+      const open = picker.hidden;
+      for (const r of Object.values(rows)) {
+        r.picker.hidden = true;
+        r.row.classList.remove('open');
+      }
+      if (open) {
+        picker.hidden = false;
+        row.classList.add('open');
+        wheels.forEach((w) => w.sync());
+      }
+    });
+    item.append(row, picker);
+    box.append(item);
+    rows[key] = { item, row, value, picker, wheels };
+  }
+
+  function saveChase() {
+    const [h, m] = rows.chase.wheels;
+    save({ chaseMin: Math.max(1, h.value * 60 + m.value) });
+  }
+
+  const every = LIMITS.everyMin;
+  addPicker('headStart', 'Náskok Fantoma', [
+    { min: LIMITS.headStartMin[0], max: LIMITS.headStartMin[1], value: t0.headStartMin, unit: 'min', onChange: (v) => save({ headStartMin: v }) },
+  ]);
+  addPicker('chase', 'Délka hry', [
+    { min: LIMITS.chaseHours[0], max: LIMITS.chaseHours[1], value: Math.floor(t0.chaseMin / 60), unit: 'h', onChange: saveChase },
+    { min: 0, max: 59, value: t0.chaseMin % 60, unit: 'min', onChange: saveChase },
+  ]);
+  addPicker('phantomEvery', 'Fantom se ukazuje každých', [
+    { min: every[0], max: every[1], value: t0.phantomEveryMin, unit: 'min', onChange: (v) => save({ phantomEveryMin: v }) },
+  ]);
+
+  const visItem = document.createElement('div');
+  const visLabel = document.createElement('div');
+  visLabel.className = 'set-label';
+  visLabel.textContent = 'Komu se ukazují detektivové';
+  const seg = document.createElement('div');
+  seg.className = 'segmented';
+  const visButtons = {};
+  for (const [key, text] of Object.entries(VISIBILITY)) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = text;
+    b.addEventListener('click', () => save({ detectiveVisibility: key }));
+    seg.append(b);
+    visButtons[key] = b;
+  }
+  visItem.append(visLabel, seg);
+  box.append(visItem);
+
+  addPicker('detEvery', 'Detektivové se ukazují každých', [
+    { min: every[0], max: every[1], value: t0.detectiveEveryMin, unit: 'min', onChange: (v) => save({ detectiveEveryMin: v }) },
+  ]);
+
+  const setWheel = (w, v) => { if (w.value !== v) w.set(v); };
+
+  return {
+    code: state.code,
+    update(t) {
+      rows.headStart.value.textContent = formatMinutes(t.headStartMin);
+      rows.chase.value.textContent = formatMinutes(t.chaseMin);
+      rows.phantomEvery.value.textContent = `${t.phantomEveryMin} min`;
+      rows.detEvery.value.textContent = `${t.detectiveEveryMin} min`;
+      setWheel(rows.headStart.wheels[0], t.headStartMin);
+      setWheel(rows.chase.wheels[0], Math.floor(t.chaseMin / 60));
+      setWheel(rows.chase.wheels[1], t.chaseMin % 60);
+      setWheel(rows.phantomEvery.wheels[0], t.phantomEveryMin);
+      setWheel(rows.detEvery.wheels[0], t.detectiveEveryMin);
+      rows.detEvery.item.hidden = t.detectiveVisibility === 'none';
+      for (const [key, b] of Object.entries(visButtons)) b.classList.toggle('active', key === t.detectiveVisibility);
+    },
+  };
+}
 
 $('start').addEventListener('click', async () => {
   if (!window.confirm('Spustit hru? Fantom začne utíkat a běží čas.')) return;
@@ -298,12 +416,21 @@ function timeline() {
   return phaseAt(state.serverNow(), meta.times, meta.startedAt);
 }
 
+// Vidím (já) detektivy? Po konci hry vidí všichni všechno.
+function canSeeDetectives() {
+  if (!isRunning()) return true;
+  const vis = normalizeTimes(state.game.meta.times).detectiveVisibility;
+  return isPhantom() ? (vis === 'all' || vis === 'phantom') : (vis === 'all' || vis === 'detectives');
+}
+
 function tick() {
   if (!isRunning()) return;
   const tl = timeline();
   if (!tl) return;
   const now = state.serverNow();
   const phantom = isPhantom();
+  const vis = tl.times.detectiveVisibility;
+  const until = (track) => (track && track.nextAt ? formatDuration(track.nextAt - now) : '—');
 
   // Herní panel
   $('role').className = `chip ${phantom ? 'phantom' : 'detective'}`;
@@ -311,18 +438,33 @@ function tick() {
   $('phase').textContent = tl.phase === 'headstart'
     ? (phantom ? 'Náskok – utíkej a schovej se!' : 'Fantom má náskok – čekejte')
     : 'Honička';
-  $('next-reveal').textContent = tl.nextRevealAt ? formatDuration(tl.nextRevealAt - now) : '—';
+  $('next-label').textContent = phantom ? 'Ukážeš se za' : 'Fantom se ukáže za';
+  $('next-reveal').textContent = until(tl.phantom);
   $('time-left').textContent = formatDuration(tl.endAt - now);
+  let detLabel = '';
+  if (tl.detective) {
+    if (phantom) detLabel = canSeeDetectives() ? 'Detektivy uvidíš za' : '';
+    else detLabel = { all: 'Ukážeš se za', detectives: 'Ukážeš se ostatním detektivům za', phantom: 'Ukážeš se Fantomovi za' }[vis];
+  }
+  $('det-row').hidden = !detLabel;
+  $('det-label').textContent = detLabel;
+  $('det-reveal').textContent = until(tl.detective);
   $('hud-note').textContent = hudNote(tl, now, phantom);
 
-  // Nové odhalení: upozornit a zapsat vlastní polohu
-  if (tl.revealIndex >= 0) {
-    if (state.lastRevealSeen !== null && tl.revealIndex > state.lastRevealSeen) {
-      toast(phantom ? '🔍 Odhalení! Detektivové teď vidí, kde jsi.' : '🔍 Odhalení! Podívej se, kde je Fantom.');
-    }
-    writeMyReveal(tl, now);
+  // Nová odhalení: upozornit a zapsat vlastní polohu
+  const seen = state.lastRevealSeen;
+  const messages = [];
+  if (seen && tl.phantom.index > seen.phantom) {
+    messages.push(phantom ? '🔍 Detektivové teď vidí, kde jsi.' : '🔍 Fantom odhalen! Podívej se na mapu.');
   }
-  state.lastRevealSeen = tl.revealIndex;
+  if (seen && tl.detective && tl.detective.index > seen.detective) {
+    if (phantom && canSeeDetectives()) messages.push('🕵️ Vidíš, kde jsou detektivové.');
+    else if (!phantom && vis === 'phantom') messages.push('👁️ Fantom teď vidí, kde jsi.');
+    else if (!phantom && !messages.length) messages.push('🕵️ Polohy detektivů aktualizovány.');
+  }
+  if (messages.length) toast(messages.join(' '));
+  state.lastRevealSeen = { phantom: tl.phantom.index, detective: tl.detective ? tl.detective.index : -1 };
+  writeMyReveal(tl, now);
   renderMarkers();
 
   // Vypršel čas → Fantom unikl
@@ -333,22 +475,33 @@ function tick() {
 }
 
 function writeMyReveal(tl, now) {
-  const index = tl.revealIndex;
-  const done = state.game.reveals?.[index]?.[state.uid];
-  if (done || state.writing.has(index) || !state.fix) return;
-  const revealAt = tl.chaseStart + index * state.game.meta.times.revealEveryMin * 60000;
-  const late = now - revealAt > 30000; // telefon byl zamčený, poloha je pozdější
-  state.writing.add(index);
-  state.api.writeReveal(state.code, index, state.uid, state.fix, late).catch(() => state.writing.delete(index));
+  const reveals = state.game.reveals || {};
+  const phantom = isPhantom();
+  const track = phantom ? tl.phantom : tl.detective;
+  if (!track || track.index < 0 || !state.fix) return;
+  const kind = phantom ? 'phantom' : 'detective';
+  const index = track.index;
+  const done = phantom ? reveals.phantom?.[index] : reveals.detectives?.[index]?.[state.uid];
+  const key = `${kind}${index}`;
+  if (done || state.writing.has(key)) return;
+  const late = now - track.at > 30000; // telefon byl zamčený, poloha je pozdější
+  state.writing.add(key);
+  state.api.writeReveal(state.code, kind, index, state.uid, state.fix, late).catch(() => state.writing.delete(key));
 }
 
-function latestReveal(uid, upTo) {
-  const reveals = state.game.reveals || {};
-  for (let k = upTo; k >= 0; k--) {
-    if (reveals[k]?.[uid]) return { ...reveals[k][uid], index: k };
-  }
+function latestPhantom(upTo) {
+  const list = state.game.reveals?.phantom || {};
+  for (let k = upTo; k >= 0; k--) if (list[k]) return { ...list[k], index: k };
   return null;
 }
+
+function latestDetective(uid, upTo) {
+  const list = state.game.reveals?.detectives || {};
+  for (let k = upTo; k >= 0; k--) if (list[k]?.[uid]) return { ...list[k][uid], index: k };
+  return null;
+}
+
+const maxKey = (obj) => Math.max(-1, ...Object.keys(obj || {}).filter((k) => obj[k]).map(Number));
 
 function hudNote(tl, now, phantom) {
   if (tl.phase === 'headstart') {
@@ -357,9 +510,9 @@ function hudNote(tl, now, phantom) {
       : 'Až skončí náskok, uvidíte, kde Fantom je.';
   }
   if (phantom) return 'Při každém odhalení detektivové uvidí, kde právě jsi.';
-  const ph = latestReveal(state.game.meta.phantomUid, tl.revealIndex);
+  const ph = latestPhantom(tl.phantom.index);
   if (!ph) return 'Fantomův telefon se zatím neozval.';
-  if (ph.index < tl.revealIndex) return 'Fantom se při posledním odhalení neozval – ukazuji starší polohu.';
+  if (ph.index < tl.phantom.index) return 'Fantom se při posledním odhalení neozval – ukazuji starší polohu.';
   return `Fantom naposledy viděn před ${formatDuration(now - ph.t)}${ph.late ? ' (poloha se zpozdila)' : ''}.`;
 }
 
@@ -374,9 +527,10 @@ function renderMarkers() {
   const ended = !isRunning();
   const tl = timeline();
   const reveals = game.reveals || {};
-  const maxIndex = Math.max(-1, ...Object.keys(reveals).map(Number));
-  const limit = ended ? maxIndex : (tl ? tl.revealIndex : -1);
-  const key = JSON.stringify([game.meta.status, limit, reveals]);
+  const pLimit = ended ? maxKey(reveals.phantom) : (tl ? tl.phantom.index : -1);
+  const dLimit = ended ? maxKey(reveals.detectives) : (tl && tl.detective ? tl.detective.index : -1);
+  const seeDetectives = canSeeDetectives();
+  const key = JSON.stringify([game.meta.status, pLimit, dLimit, seeDetectives, reveals]);
   if (key === state.markersKey) return;
   state.markersKey = key;
 
@@ -384,27 +538,29 @@ function renderMarkers() {
   const lines = [];
   const phantomUid = game.meta.phantomUid;
 
-  // Detektivové: poloha z posledního odhalení
-  for (const [uid, player] of Object.entries(game.players)) {
-    if (uid === phantomUid || uid === state.uid) continue;
-    const r = latestReveal(uid, limit);
-    if (r) markers.push({ lat: r.lat, lng: r.lng, kind: 'detective', label: player.name + (r.index < limit ? ' (starší)' : '') });
+  // Detektivové: poloha z jejich posledního odhalení (jen když je smím vidět)
+  if (seeDetectives) {
+    for (const [uid, player] of Object.entries(game.players)) {
+      if (uid === phantomUid || uid === state.uid) continue;
+      const r = latestDetective(uid, dLimit);
+      if (r) markers.push({ lat: r.lat, lng: r.lng, kind: 'detective', label: player.name + (r.index < dLimit ? ' (starší)' : '') });
+    }
   }
 
   // Fantom: během hry poslední a předchozí odhalení, po konci celá trasa
   if (ended) {
     const trail = [];
-    for (let k = 0; k <= maxIndex; k++) {
-      if (reveals[k]?.[phantomUid]) trail.push({ ...reveals[k][phantomUid], index: k });
+    for (let k = 0; k <= pLimit; k++) {
+      if (reveals.phantom?.[k]) trail.push({ ...reveals.phantom[k], index: k });
     }
     if (trail.length > 1) lines.push(trail.map((r) => [r.lat, r.lng]));
     trail.forEach((r, i) => markers.push({
       lat: r.lat, lng: r.lng, kind: 'phantom', faded: i < trail.length - 1, label: `${r.index + 1}.`,
     }));
   } else if (!isPhantom()) {
-    const last = latestReveal(phantomUid, limit);
+    const last = latestPhantom(pLimit);
     if (last) {
-      const prev = latestReveal(phantomUid, last.index - 1);
+      const prev = latestPhantom(last.index - 1);
       if (prev) {
         markers.push({ lat: prev.lat, lng: prev.lng, kind: 'phantom', faded: true, label: 'předtím' });
         lines.push([[prev.lat, prev.lng], [last.lat, last.lng]]);
@@ -421,7 +577,8 @@ function renderResult() {
   const phantomName = players[meta.phantomUid]?.name || 'Fantom';
   const caught = meta.status === 'caught';
   const phantom = isPhantom();
-  const chaseStart = meta.startedAt + meta.times.headStartMin * 60000;
+  const times = normalizeTimes(meta.times);
+  const chaseStart = meta.startedAt + times.headStartMin * 60000;
 
   $('result-icon').textContent = caught ? '🕵️' : '👻';
   $('result-title').textContent = caught ? 'Fantom dopaden!' : 'Fantom unikl!';
@@ -431,7 +588,7 @@ function renderResult() {
       ? `${phantomName} byl dopaden ještě během náskoku.`
       : `Detektivové dopadli Fantoma (${phantomName}) po ${formatDuration((meta.endedAt || chaseStart) - chaseStart)} honičky.`;
   } else {
-    text = `${phantomName} utíkal celých ${meta.times.chaseMin} minut a nikdo ho nedopadl.`;
+    text = `${phantomName} utíkal celou hru (${formatMinutes(times.chaseMin)}) a nikdo ho nedopadl.`;
   }
   const verdict = phantom ? (caught ? 'Tentokrát to nevyšlo.' : 'Vyhrál jsi!') : (caught ? 'Vyhráli jste!' : 'Tentokrát vám utekl.');
   $('result-text').textContent = `${text} ${verdict}`;

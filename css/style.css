@@ -418,3 +418,121 @@ html, body {
 .result-icon {
   font-size: 72px;
 }
+
+/* ---------- Nastavení hry a válečky (jako Hodiny na iPhonu) ---------- */
+#settings {
+  margin: 16px 0 4px;
+  border-top: 1px solid var(--line);
+}
+
+.set-row {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 !important;
+  padding: 14px 2px !important;
+  border: none !important;
+  border-bottom: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  font-weight: 400 !important;
+  font-size: 16px !important;
+  text-align: left;
+}
+
+.set-row strong {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.set-row.open strong {
+  color: var(--text);
+}
+
+.set-picker {
+  display: flex;
+  gap: 4px;
+  position: relative;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+/* zvýrazněný pruh uprostřed */
+.set-picker::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(4px + 80px);
+  height: 40px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+}
+
+.wheel {
+  position: relative;
+  flex: 1;
+  height: 200px;
+  perspective: 500px;
+}
+
+.wheel-list {
+  height: 100%;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  padding: 80px 0;
+  box-sizing: border-box;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(transparent, #000 30%, #000 70%, transparent);
+  mask-image: linear-gradient(transparent, #000 30%, #000 70%, transparent);
+}
+
+.wheel-list::-webkit-scrollbar {
+  display: none;
+}
+
+.wheel-item {
+  height: 40px;
+  line-height: 40px;
+  padding-right: 48px;
+  text-align: right;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+  scroll-snap-align: center;
+  backface-visibility: hidden;
+  cursor: pointer;
+}
+
+.wheel-unit {
+  position: absolute;
+  top: 80px;
+  left: calc(100% - 44px);
+  line-height: 40px;
+  font-size: 15px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.set-label {
+  margin: 16px 0 8px;
+  font-size: 16px;
+}
+
+.segmented {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.segmented button {
+  margin: 0 !important;
+  padding: 10px 6px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+
+.segmented button.active {
+  border-color: var(--accent) !important;
+  background: rgba(251, 191, 36, 0.15) !important;
+  color: var(--accent) !important;
+}

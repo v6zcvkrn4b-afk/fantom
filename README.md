@@ -21,6 +21,7 @@ js/main.js            obrazovky a průběh hry
 js/game.js            zakládání/připojení ke hře, zápisy do databáze
 js/timing.js          časová osa hry (náskok, odhalení, konec)
 js/mapview.js         mapa, hranice území a značky hráčů
+js/wheel.js           otočný váleček pro výběr času (jako Hodiny na iPhonu)
 js/config.js          pravidla hry (časy) a hranice herního území
 database.rules.json   pravidla databáze (vkládají se ve Firebase konzoli)
 js/gps.js             sledování polohy telefonu

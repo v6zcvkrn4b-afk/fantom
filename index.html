@@ -35,8 +35,11 @@
       <span id="phase"></span>
     </div>
     <div class="hud-row">
-      <span class="hud-label">Odhalení za</span><strong id="next-reveal" class="big"></strong>
+      <span id="next-label" class="hud-label"></span><strong id="next-reveal" class="big"></strong>
       <span class="hud-label">Konec za</span><strong id="time-left"></strong>
+    </div>
+    <div id="det-row" class="hud-row">
+      <span id="det-label" class="hud-label"></span><strong id="det-reveal"></strong>
     </div>
     <div id="hud-note"></div>
   </div>
@@ -69,9 +72,7 @@
       <div id="lobby-code" class="code"></div>
       <p id="lobby-hint" class="muted"></p>
       <ul id="lobby-players"></ul>
-      <label id="test-wrap" class="check" hidden>
-        <input id="test-mode" type="checkbox"> Zkušební hra (zkrácené časy: 1 min náskok, odhalení každou minutu, 5 min honička)
-      </label>
+      <div id="settings" hidden></div>
       <p id="lobby-times" class="muted small"></p>
       <button id="start" type="button" class="primary" hidden>Spustit hru</button>
       <p id="lobby-wait" class="muted center" hidden>Čeká se, až zakladatel hru spustí…</p>

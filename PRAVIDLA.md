@@ -9,10 +9,9 @@ Městská hra pro 4–6 hráčů v reálných ulicích. Výchozí město: **Šum
 ## Průběh
 1. Jeden hráč hru založí a dostane 4místný kód. Ostatní ho zadají spolu se svou přezdívkou, bez registrace. Zakladatel ťuknutím vybere Fantoma a hru spustí.
 2. **Náskok 5 minut:** Fantom utíká a detektivové čekají. Ničí poloha se zatím nezobrazuje.
-3. **Honička 45 minut:** každé **4 minuty** proběhne pro všechny současně **odhalení**, poprvé v 5. minutě hry a naposledy ve 49. minutě:
+3. **Honička 45 minut** (podle nastavení): Fantom i detektivové se pravidelně **odhalují**, každá skupina podle svého intervalu (výchozí každé 4 minuty, poprvé hned po skončení náskoku):
    - detektivové uvidí přesný bod, kde byl Fantom v okamžiku odhalení,
-   - detektivové uvidí navzájem své polohy,
-   - Fantom uvidí polohy detektivů.
+   - polohy detektivů uvidí podle nastavení ostatní detektivové a/nebo Fantom.
 4. Celkem hra trvá 50 minut (5 minut náskok + 45 minut honičky).
 
 ## Co je vidět na mapě
@@ -32,8 +31,15 @@ Městská hra pro 4–6 hráčů v reálných ulicích. Výchozí město: **Šum
 - Pohyb jen pěšky, žádná doprava (kolo, autobus, auto…). Hra to nehlídá, je to věc férovosti.
 - Telefon musí mít po celou dobu hry otevřenou hru a **rozsvícený displej**, jinak se poloha neaktualizuje. Doporučujeme powerbanku.
 
-## Zkušební hra
-Zakladatel může v čekárně zapnout zkušební hru se zkrácenými časy (1 min náskok, odhalení každou minutu, 5 min honička), aby šlo aplikaci rychle vyzkoušet.
+## Nastavení hry
+Zakladatel v čekárně nastaví (časy se vybírají otočnými válečky jako v Hodinách na iPhonu):
+- **náskok Fantoma** (výchozí 5 min),
+- **délku hry**, tj. honičky po náskoku (výchozí 45 min),
+- **jak často se ukazuje Fantom** (výchozí každé 4 min),
+- **komu se ukazují detektivové**: všem / jen sobě navzájem / jen Fantomovi / nikomu (výchozí všem),
+- **jak často se ukazují detektivové** (výchozí každé 4 min).
+
+Na rychlé vyzkoušení stačí nastavit krátké časy, např. 1 min náskok, 5 min hra a odhalení každou minutu.
 
 ## Otevřené otázky
 - Co se stane, když Fantom opustí území. Zatím hra hráči jen ukáže varování (návrh: jeho poloha se detektivům ukáže okamžitě).

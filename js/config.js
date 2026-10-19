@@ -1,16 +1,18 @@
-// Pravidla hry – všechny časy jsou v minutách. Podrobně viz PRAVIDLA.md.
-// Časy se při založení hry uloží do databáze, aby je všechny telefony měly stejné.
+// Výchozí nastavení hry – časy v minutách. Podrobně viz PRAVIDLA.md.
+// Zakladatel je může v čekárně změnit; uloží se do databáze, aby je všechny telefony měly stejné.
 export const TIMES = {
-  headStartMin: 5,       // náskok Fantoma, poloha se zatím nezobrazuje
-  chaseMin: 45,          // jak dlouho musí Fantom utíkat po skončení náskoku
-  revealEveryMin: 4,     // jak často se všem odhalí poloha
+  headStartMin: 5,          // náskok Fantoma, poloha se zatím nezobrazuje
+  chaseMin: 45,             // jak dlouho musí Fantom utíkat po skončení náskoku
+  phantomEveryMin: 4,       // jak často se ukazuje Fantom
+  detectiveEveryMin: 4,     // jak často se ukazují detektivové
+  detectiveVisibility: 'all', // komu: all | detectives | phantom | none (viz VISIBILITY v timing.js)
 };
 
-// Zkušební hra se zkrácenými časy (na vyzkoušení aplikace)
-export const TEST_TIMES = {
-  headStartMin: 1,
-  chaseMin: 5,
-  revealEveryMin: 1,
+// Rozsahy válečků v nastavení
+export const LIMITS = {
+  headStartMin: [0, 30],
+  chaseHours: [0, 3],
+  everyMin: [1, 30],
 };
 
 export const PLAYERS = {
