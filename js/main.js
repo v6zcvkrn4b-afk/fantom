@@ -12,11 +12,21 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; přispěvatelé <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
 }).addTo(map);
 
+// Vše mimo herní území je „za červeným sklem“: obdélník přes celý svět s vyříznutým územím
+const WORLD = [[-90, -180], [-90, 180], [90, 180], [90, -180]];
+L.polygon([WORLD, BOUNDARY], {
+  stroke: false,
+  fillColor: '#dc2626',
+  fillOpacity: 0.3,
+  interactive: false,
+}).addTo(map);
+
+// Hranice území: plná červená čára
 L.polygon(BOUNDARY, {
-  color: '#fbbf24',
-  weight: 3,
-  fillOpacity: 0.05,
-  dashArray: '8 6',
+  color: '#dc2626',
+  weight: 4,
+  fill: false,
+  interactive: false,
 }).addTo(map);
 
 let me = null;
