@@ -28,7 +28,68 @@
     <span id="status">Zjišťuji polohu…</span>
   </header>
 
+  <!-- Herní panel (během hry) -->
+  <div id="hud" hidden>
+    <div class="hud-row">
+      <span id="role" class="chip"></span>
+      <span id="phase"></span>
+    </div>
+    <div class="hud-row">
+      <span class="hud-label">Odhalení za</span><strong id="next-reveal" class="big"></strong>
+      <span class="hud-label">Konec za</span><strong id="time-left"></strong>
+    </div>
+    <div id="hud-note"></div>
+  </div>
+  <div id="warn" hidden>⚠️ Jsi MIMO herní území – vrať se!</div>
+  <div id="toast" hidden></div>
+
   <button id="locate" type="button" aria-label="Moje poloha">◎</button>
+  <button id="caught" type="button" hidden>Byl jsem dopaden</button>
+
+  <!-- Úvodní obrazovka -->
+  <section id="home" class="screen" hidden>
+    <div class="card">
+      <h1>FANTOM</h1>
+      <p class="muted">Dopadněte Fantoma v ulicích Šumperka.</p>
+      <label for="name">Tvoje přezdívka</label>
+      <input id="name" type="text" maxlength="20" autocomplete="nickname" placeholder="např. Sherlock">
+      <button id="create" type="button" class="primary">Založit novou hru</button>
+      <div class="divider"><span>nebo</span></div>
+      <label for="code">Kód hry</label>
+      <input id="code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="1234">
+      <button id="join" type="button">Připojit se ke hře</button>
+      <p id="home-error" class="error" hidden></p>
+    </div>
+  </section>
+
+  <!-- Čekárna před startem -->
+  <section id="lobby" class="screen" hidden>
+    <div class="card">
+      <p class="muted center">Kód hry – řekni ho ostatním</p>
+      <div id="lobby-code" class="code"></div>
+      <p id="lobby-hint" class="muted"></p>
+      <ul id="lobby-players"></ul>
+      <label id="test-wrap" class="check" hidden>
+        <input id="test-mode" type="checkbox"> Zkušební hra (zkrácené časy: 1 min náskok, odhalení každou minutu, 5 min honička)
+      </label>
+      <p id="lobby-times" class="muted small"></p>
+      <button id="start" type="button" class="primary" hidden>Spustit hru</button>
+      <p id="lobby-wait" class="muted center" hidden>Čeká se, až zakladatel hru spustí…</p>
+      <button id="leave" type="button" class="link">Opustit hru</button>
+    </div>
+  </section>
+
+  <!-- Výsledek -->
+  <section id="result" class="screen" hidden>
+    <div class="card center">
+      <div id="result-icon" class="result-icon"></div>
+      <h1 id="result-title"></h1>
+      <p id="result-text" class="muted"></p>
+      <button id="show-map" type="button" class="primary">Ukázat trasu Fantoma</button>
+      <button id="new-game" type="button">Nová hra</button>
+    </div>
+  </section>
+  <button id="back-result" type="button" hidden>Zpět na výsledek</button>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script type="module" src="js/main.js"></script>

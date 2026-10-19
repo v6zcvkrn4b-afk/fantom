@@ -7,7 +7,7 @@ Městská hra pro 4–6 hráčů v reálných ulicích. Výchozí město: **Šum
 - **Detektivové** (3–5 hráčů) ho hledají a snaží se ho dopadnout.
 
 ## Průběh
-1. Jeden hráč hru založí a dostane kód. Ostatní ho zadají spolu se svou přezdívkou. Bez registrace.
+1. Jeden hráč hru založí a dostane 4místný kód. Ostatní ho zadají spolu se svou přezdívkou, bez registrace. Zakladatel ťuknutím vybere Fantoma a hru spustí.
 2. **Náskok 5 minut:** Fantom utíká a detektivové čekají. Ničí poloha se zatím nezobrazuje.
 3. **Honička 45 minut:** každé **4 minuty** proběhne pro všechny současně **odhalení**, poprvé v 5. minutě hry a naposledy ve 49. minutě:
    - detektivové uvidí přesný bod, kde byl Fantom v okamžiku odhalení,
@@ -32,5 +32,8 @@ Městská hra pro 4–6 hráčů v reálných ulicích. Výchozí město: **Šum
 - Pohyb jen pěšky, žádná doprava (kolo, autobus, auto…). Hra to nehlídá, je to věc férovosti.
 - Telefon musí mít po celou dobu hry otevřenou hru a **rozsvícený displej**, jinak se poloha neaktualizuje. Doporučujeme powerbanku.
 
+## Zkušební hra
+Zakladatel může v čekárně zapnout zkušební hru se zkrácenými časy (1 min náskok, odhalení každou minutu, 5 min honička), aby šlo aplikaci rychle vyzkoušet.
+
 ## Otevřené otázky
-- Co se stane, když Fantom opustí území (návrh: jeho poloha se detektivům ukáže okamžitě).
+- Co se stane, když Fantom opustí území. Zatím hra hráči jen ukáže varování (návrh: jeho poloha se detektivům ukáže okamžitě).

@@ -8,3 +8,5 @@
 - GitHub CLI je v `~/.local/bin/gh`. Na Macu jsou přihlášené dva účty, pro tento projekt se používá `v6zcvkrn4b-afk` (před pushem ověř `gh auth status`).
 - Lokální test: `python3 -m http.server 8000` ve složce projektu (moduly nejdou otevřít přes file://). JS logiku bez DOM jde ověřit přes `osascript -l JavaScript`.
 - Omezení webu: GPS funguje jen při otevřené stránce a rozsvíceném displeji (proto `js/wakelock.js`).
+- Pravidla databáze jsou v `database.rules.json`; nasazují se ručně vložením ve Firebase konzoli (Realtime Database → Rules → Publish). Uživatele o to po každé změně požádej.
+- Ověření pravidel a toku hry: REST API (`identitytoolkit … accounts:signUp?key=…` pro anonymní token, pak `…/games/X.json?auth=TOKEN`).

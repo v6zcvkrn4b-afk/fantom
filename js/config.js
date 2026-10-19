@@ -1,9 +1,20 @@
 // Pravidla hry – všechny časy jsou v minutách. Podrobně viz PRAVIDLA.md.
-export const RULES = {
+// Časy se při založení hry uloží do databáze, aby je všechny telefony měly stejné.
+export const TIMES = {
   headStartMin: 5,       // náskok Fantoma, poloha se zatím nezobrazuje
   chaseMin: 45,          // jak dlouho musí Fantom utíkat po skončení náskoku
   revealEveryMin: 4,     // jak často se všem odhalí poloha
-  minDetectives: 3,
+};
+
+// Zkušební hra se zkrácenými časy (na vyzkoušení aplikace)
+export const TEST_TIMES = {
+  headStartMin: 1,
+  chaseMin: 5,
+  revealEveryMin: 1,
+};
+
+export const PLAYERS = {
+  minDetectives: 3,      // doporučené minimum (hru lze spustit i s méně, třeba na zkoušku)
   maxDetectives: 5,
 };
 

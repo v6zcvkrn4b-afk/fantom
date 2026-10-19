@@ -1,0 +1,32 @@
+{
+  "rules": {
+    "games": {
+      "$code": {
+        ".read": "auth != null",
+        "meta": {
+          ".write": "auth != null && ((!data.exists() && newData.child('hostUid').val() === auth.uid) || (data.child('hostUid').val() === auth.uid && data.child('status').val() === 'lobby'))",
+          "status": {
+            ".write": "auth != null && data.val() === 'running' && root.child('games/' + $code + '/players/' + auth.uid).exists() && ((newData.val() === 'caught' && root.child('games/' + $code + '/meta/phantomUid').val() === auth.uid) || (newData.val() === 'escaped' && now + 10000 >= root.child('games/' + $code + '/meta/startedAt').val() + (root.child('games/' + $code + '/meta/times/headStartMin').val() + root.child('games/' + $code + '/meta/times/chaseMin').val()) * 60000))"
+          },
+          "endedAt": {
+            ".write": "auth != null && !data.exists() && root.child('games/' + $code + '/meta/status').val() === 'running' && root.child('games/' + $code + '/players/' + auth.uid).exists()"
+          }
+        },
+        "players": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && root.child('games/' + $code + '/meta/status').val() === 'lobby'",
+            ".validate": "newData.hasChildren(['name']) && newData.child('name').isString() && newData.child('name').val().length >= 1 && newData.child('name').val().length <= 20"
+          }
+        },
+        "reveals": {
+          "$n": {
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid && !data.exists() && root.child('games/' + $code + '/meta/status').val() === 'running' && root.child('games/' + $code + '/players/' + auth.uid).exists()",
+              ".validate": "newData.hasChildren(['lat', 'lng', 't']) && newData.child('lat').isNumber() && newData.child('lng').isNumber()"
+            }
+          }
+        }
+      }
+    }
+  }
+}

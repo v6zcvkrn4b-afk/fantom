@@ -1,5 +1,5 @@
 // Napojení na Firebase: anonymní přihlášení hráče a databáze pro sdílení stavu hry.
-// Tyto údaje nejsou tajné, přístup k datům hlídají pravidla databáze.
+// Tyto údaje nejsou tajné, přístup k datům hlídají pravidla databáze (database.rules.json).
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
 import { getDatabase, ref, onValue } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js';
@@ -18,14 +18,14 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getDatabase(app);
 
-// Přihlásí hráče anonymně a hlásí, jestli je spojení se serverem živé.
-// onStatus dostane true/false (připojeno), případně text chyby.
+// Rozdíl mezi hodinami telefonu a serveru, aby všichni počítali stejný čas
+let serverOffset = 0;
+onValue(ref(db, '.info/serverTimeOffset'), (snap) => { serverOffset = snap.val() || 0; });
+export const serverNow = () => Date.now() + serverOffset;
+
+// Přihlásí hráče anonymně (vrací jeho id) a hlásí, jestli je spojení se serverem živé
 export async function connect(onStatus) {
-  try {
-    await signInAnonymously(auth);
-  } catch (err) {
-    onStatus(false, `Přihlášení selhalo (${err.code})`);
-    return;
-  }
+  const cred = await signInAnonymously(auth);
   onValue(ref(db, '.info/connected'), (snap) => onStatus(snap.val() === true));
+  return cred.user.uid;
 }
