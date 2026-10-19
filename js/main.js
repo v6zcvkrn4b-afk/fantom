@@ -85,7 +85,9 @@ function updateGpsStatus() {
   const inside = isInside([state.fix.lat, state.fix.lng], state.area.boundary);
   $('status').classList.toggle('error', !inside);
   $('status').textContent = `${inside ? 'V herním území' : 'MIMO území!'} · přesnost ${Math.round(state.fix.accuracy)} m`;
-  $('warn').hidden = !(isRunning() && !inside);
+  const outside = isRunning() && !inside;
+  $('warn').hidden = !outside;
+  $('outside').hidden = !outside;
 }
 
 $('locate').addEventListener('click', () => view.centerOnMe());
@@ -166,6 +168,7 @@ function showHome(error) {
   $('caught').hidden = true;
   $('back-result').hidden = true;
   $('warn').hidden = true;
+  $('outside').hidden = true;
   renderMarkers();
   setArea(autoArea());
   showStep('start', error);
@@ -285,6 +288,7 @@ function render() {
     $('hud').hidden = true;
     $('caught').hidden = true;
     $('warn').hidden = true;
+  $('outside').hidden = true;
     showScreen(state.reviewing ? null : 'result');
     $('back-result').hidden = !state.reviewing;
     renderResult();
@@ -619,7 +623,7 @@ function hudNote(tl, now, phantom) {
   const ph = latestPhantom(tl.phantom.index);
   if (!ph) return 'Fantomův telefon se zatím neozval.';
   if (ph.index < tl.phantom.index) return 'Fantom se při posledním odhalení neozval – ukazuji starší polohu.';
-  return `Fantom naposledy viděn před ${formatDuration(now - ph.t)}${ph.late ? ' (poloha se zpozdila)' : ''}.`;
+  return '';
 }
 
 // ---------- Značky na mapě ----------
