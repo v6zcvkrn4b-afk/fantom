@@ -69,6 +69,17 @@ function updateGpsStatus() {
 $('locate').addEventListener('click', () => view.centerOnMe());
 keepScreenOn();
 
+// Na výšku: kde to prohlížeč dovolí (Android, aplikace z plochy), orientaci zamkneme.
+// Safari na iPhonu zámek nepodporuje – tam hru na šířku zakryje výzva k otočení (CSS #rotate).
+function lockPortrait() {
+  try {
+    const p = screen.orientation?.lock?.('portrait');
+    if (p) p.catch(() => {});
+  } catch { /* nepodporováno */ }
+}
+lockPortrait();
+document.addEventListener('pointerdown', lockPortrait, { once: true });
+
 // ---------- Zvuk a vibrace při odhalení ----------
 // Prohlížeč dovolí přehrát zvuk až po dotyku, proto se zvuk „odemkne“ prvním ťuknutím.
 let audio = null;

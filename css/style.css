@@ -560,3 +560,36 @@ html, body {
   letter-spacing: 1px;
   text-transform: uppercase;
 }
+
+/* ---------- Jen na výšku ---------- */
+/* Telefon otočený na šířku (nízká obrazovka + dotykové ovládání): zakrýt hru výzvou */
+#rotate {
+  display: none;
+}
+
+@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+  #rotate {
+    position: fixed;
+    inset: 0;
+    z-index: 5000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .rotate-icon {
+    font-size: 64px;
+    animation: rotate-hint 2s ease-in-out infinite;
+  }
+}
+
+@keyframes rotate-hint {
+  0%, 30% { transform: rotate(-90deg); }
+  60%, 100% { transform: rotate(0deg); }
+}
