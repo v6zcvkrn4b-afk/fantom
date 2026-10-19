@@ -1,6 +1,6 @@
 # Fantom
 
-Městská hra v reálných ulicích: tým detektivů se snaží dopadnout Fantoma, jehož poloha se ukazuje jen každé 4 minuty.
+Městská hra v reálných ulicích: tým detektivů se snaží dopadnout Fantoma, jehož poloha se ukazuje jen jednou za pár minut (výchozí každých 5 minut).
 
 Pravidla: [PRAVIDLA.md](PRAVIDLA.md) · Plán vývoje: [PLAN.md](PLAN.md)
 

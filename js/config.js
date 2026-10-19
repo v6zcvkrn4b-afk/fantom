@@ -3,8 +3,8 @@
 export const TIMES = {
   headStartMin: 5,          // náskok Fantoma, poloha se zatím nezobrazuje
   chaseMin: 45,             // jak dlouho musí Fantom utíkat po skončení náskoku
-  phantomEveryMin: 4,       // jak často se ukazuje Fantom
-  detectiveEveryMin: 4,     // jak často se ukazují detektivové
+  phantomEveryMin: 5,       // jak často se ukazuje Fantom
+  detectiveEveryMin: 5,     // jak často se ukazují detektivové
   detectiveVisibility: 'all', // komu: all | detectives | phantom | none (viz VISIBILITY v timing.js)
   showDetectiveNames: true,   // jména detektivů na mapě (false = anonymně)
 };

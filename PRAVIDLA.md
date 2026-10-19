@@ -9,7 +9,7 @@ Městská hra pro 4–6 hráčů v reálných ulicích. Výchozí město: **Šum
 ## Průběh
 1. Jeden hráč dá **Založit novou hru**, napíše přezdívku a dostane 4místný kód. Ostatní dají **Připojit se ke hře**, zadají kód a pak přezdívku. Bez registrace. V čekárně všichni vidí hráče i nastavení hry; zakladatel nastavení upraví, ťuknutím vybere Fantoma a hru spustí.
 2. **Náskok 5 minut:** Fantom utíká a detektivové čekají. Ničí poloha se zatím nezobrazuje.
-3. **Honička 45 minut** (podle nastavení): Fantom i detektivové se pravidelně **odhalují**, každá skupina podle svého intervalu (výchozí každé 4 minuty, poprvé hned po skončení náskoku):
+3. **Honička 45 minut** (podle nastavení): Fantom i detektivové se pravidelně **odhalují**, každá skupina podle svého intervalu (výchozí každých 5 minut, poprvé hned po skončení náskoku):
    - detektivové uvidí přesný bod, kde byl Fantom v okamžiku odhalení,
    - polohy detektivů uvidí podle nastavení ostatní detektivové a/nebo Fantom.
 4. Celkem hra trvá 50 minut (5 minut náskok + 45 minut honičky).
@@ -35,9 +35,9 @@ Městská hra pro 4–6 hráčů v reálných ulicích. Výchozí město: **Šum
 Zakladatel v čekárně nastaví (časy se vybírají otočnými válečky jako v Hodinách na iPhonu):
 - **náskok Fantoma** (výchozí 5 min),
 - **délku hry**, tj. honičky po náskoku (výchozí 45 min),
-- **jak často se ukazuje Fantom** (výchozí každé 4 min),
+- **jak často se ukazuje Fantom** (výchozí každých 5 min),
 - **komu se ukazují detektivové**: všem / jen sobě navzájem / jen Fantomovi / nikomu (výchozí všem),
-- **jak často se ukazují detektivové** (výchozí každé 4 min),
+- **jak často se ukazují detektivové** (výchozí každých 5 min),
 - **jména detektivů na mapě**: zobrazit, nebo anonymně (výchozí zobrazit; po konci hry se jména ukážou vždy).
 
 Na mapě jsou detektivové červeně a Fantom černě. Tlačítkem „Obnovit výchozí nastavení“ se vše vrátí na výchozí hodnoty.
