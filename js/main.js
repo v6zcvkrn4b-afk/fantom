@@ -1,4 +1,6 @@
-import { BOUNDARY, PLAYERS, LIMITS } from './config.js';
+import {
+  BOUNDARY, PLAYERS, LIMITS, TIMES,
+} from './config.js';
 import { watchPosition } from './gps.js';
 import { keepScreenOn } from './wakelock.js';
 import { isInside } from './geo.js';
@@ -280,7 +282,8 @@ function describeTimes(t) {
   const det = t.detectiveVisibility === 'none'
     ? 'detektivové se neukazují'
     : `detektivové se ukazují ${{ all: "všem", detectives: "jen sobě navzájem", phantom: "jen Fantomovi" }[t.detectiveVisibility]} každých ${t.detectiveEveryMin} min`;
-  return `Náskok ${formatMinutes(t.headStartMin)} · hra ${formatMinutes(t.chaseMin)} · Fantom se ukazuje každé ${t.phantomEveryMin} min · ${det}.`;
+  const names = t.detectiveVisibility === 'none' ? '' : (t.showDetectiveNames ? ' se jmény' : ' anonymně');
+  return `Náskok ${formatMinutes(t.headStartMin)} · hra ${formatMinutes(t.chaseMin)} · Fantom se ukazuje každé ${t.phantomEveryMin} min · ${det}${names}.`;
 }
 
 // ---------- Nastavení hry (jen zakladatel, v čekárně) ----------
@@ -294,7 +297,8 @@ function buildSettings() {
   const rows = {};
   const t0 = normalizeTimes(state.game.meta.times);
 
-  const save = (changes) => state.api.updateTimes(state.code, changes)
+  // Ukládá se vždy celé nastavení, aby prošla kontrola v pravidlech databáze
+  const save = (changes) => state.api.updateTimes(state.code, { ...normalizeTimes(state.game.meta.times), ...changes })
     .catch((err) => window.alert(`Nastavení se nepodařilo uložit (${err.code || err.message}).`));
 
   function addPicker(key, label, wheelDefs) {
@@ -371,6 +375,31 @@ function buildSettings() {
     { min: every[0], max: every[1], value: t0.detectiveEveryMin, unit: 'min', onChange: (v) => save({ detectiveEveryMin: v }) },
   ]);
 
+  const namesItem = document.createElement('div');
+  const namesLabel = document.createElement('div');
+  namesLabel.className = 'set-label';
+  namesLabel.textContent = 'Jména detektivů na mapě';
+  const namesSeg = document.createElement('div');
+  namesSeg.className = 'segmented';
+  const nameButtons = {};
+  for (const [key, text] of [['show', 'Zobrazit jména'], ['hide', 'Anonymně']]) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = text;
+    b.addEventListener('click', () => save({ showDetectiveNames: key === 'show' }));
+    namesSeg.append(b);
+    nameButtons[key] = b;
+  }
+  namesItem.append(namesLabel, namesSeg);
+  box.append(namesItem);
+
+  const reset = document.createElement('button');
+  reset.type = 'button';
+  reset.className = 'link';
+  reset.textContent = 'Obnovit výchozí nastavení';
+  reset.addEventListener('click', () => save(TIMES));
+  box.append(reset);
+
   const setWheel = (w, v) => { if (w.value !== v) w.set(v); };
 
   return {
@@ -386,7 +415,10 @@ function buildSettings() {
       setWheel(rows.phantomEvery.wheels[0], t.phantomEveryMin);
       setWheel(rows.detEvery.wheels[0], t.detectiveEveryMin);
       rows.detEvery.item.hidden = t.detectiveVisibility === 'none';
+      namesItem.hidden = t.detectiveVisibility === 'none';
       for (const [key, b] of Object.entries(visButtons)) b.classList.toggle('active', key === t.detectiveVisibility);
+      nameButtons.show.classList.toggle('active', t.showDetectiveNames);
+      nameButtons.hide.classList.toggle('active', !t.showDetectiveNames);
     },
   };
 }
@@ -530,7 +562,8 @@ function renderMarkers() {
   const pLimit = ended ? maxKey(reveals.phantom) : (tl ? tl.phantom.index : -1);
   const dLimit = ended ? maxKey(reveals.detectives) : (tl && tl.detective ? tl.detective.index : -1);
   const seeDetectives = canSeeDetectives();
-  const key = JSON.stringify([game.meta.status, pLimit, dLimit, seeDetectives, reveals]);
+  const showNames = ended || normalizeTimes(game.meta.times).showDetectiveNames;
+  const key = JSON.stringify([game.meta.status, pLimit, dLimit, seeDetectives, showNames, reveals]);
   if (key === state.markersKey) return;
   state.markersKey = key;
 
@@ -543,7 +576,9 @@ function renderMarkers() {
     for (const [uid, player] of Object.entries(game.players)) {
       if (uid === phantomUid || uid === state.uid) continue;
       const r = latestDetective(uid, dLimit);
-      if (r) markers.push({ lat: r.lat, lng: r.lng, kind: 'detective', label: player.name + (r.index < dLimit ? ' (starší)' : '') });
+      if (!r) continue;
+      const label = (showNames ? player.name : '') + (r.index < dLimit ? ' (starší)' : '');
+      markers.push({ lat: r.lat, lng: r.lng, kind: 'detective', label: label.trim() });
     }
   }
 

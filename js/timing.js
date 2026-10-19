@@ -19,6 +19,7 @@ export function normalizeTimes(t = {}) {
     phantomEveryMin: t.phantomEveryMin ?? t.revealEveryMin ?? 4,
     detectiveEveryMin: t.detectiveEveryMin ?? t.revealEveryMin ?? 4,
     detectiveVisibility: t.detectiveVisibility ?? 'all',
+    showDetectiveNames: t.showDetectiveNames ?? true,
   };
 }
 

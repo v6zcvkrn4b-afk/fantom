@@ -2,8 +2,8 @@
 import { BOUNDARY } from './config.js';
 
 const RED = '#dc2626';
-const DETECTIVE = '#3b82f6';
-const PHANTOM = '#a855f7';
+const DETECTIVE = '#dc2626'; // detektivové červeně
+const PHANTOM = '#111111';   // Fantom černě
 
 export function createMap(elementId) {
   const map = L.map(elementId, { zoomControl: false }).fitBounds(BOUNDARY, { padding: [20, 20] });

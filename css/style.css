@@ -5,8 +5,8 @@
   --muted: #94a3b8;
   --accent: #fbbf24;
   --danger: #ef4444;
-  --detective: #3b82f6;
-  --phantom: #a855f7;
+  --detective: #dc2626;
+  --phantom: #111111;
   --card: #151827;
   --line: #2a2f45;
 }
@@ -156,6 +156,7 @@ html, body {
 
 .chip.phantom {
   background: var(--phantom);
+  box-shadow: inset 0 0 0 1px #fff;
 }
 
 .chip.detective {
@@ -397,8 +398,8 @@ html, body {
 }
 
 #lobby-players li.is-phantom {
-  border-color: var(--phantom);
-  background: rgba(168, 85, 247, 0.15);
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .card label.check {

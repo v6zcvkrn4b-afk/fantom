@@ -6,6 +6,7 @@ export const TIMES = {
   phantomEveryMin: 4,       // jak často se ukazuje Fantom
   detectiveEveryMin: 4,     // jak často se ukazují detektivové
   detectiveVisibility: 'all', // komu: all | detectives | phantom | none (viz VISIBILITY v timing.js)
+  showDetectiveNames: true,   // jména detektivů na mapě (false = anonymně)
 };
 
 // Rozsahy válečků v nastavení

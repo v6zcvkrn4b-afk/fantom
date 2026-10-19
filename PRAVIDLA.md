@@ -37,7 +37,10 @@ Zakladatel v čekárně nastaví (časy se vybírají otočnými válečky jako 
 - **délku hry**, tj. honičky po náskoku (výchozí 45 min),
 - **jak často se ukazuje Fantom** (výchozí každé 4 min),
 - **komu se ukazují detektivové**: všem / jen sobě navzájem / jen Fantomovi / nikomu (výchozí všem),
-- **jak často se ukazují detektivové** (výchozí každé 4 min).
+- **jak často se ukazují detektivové** (výchozí každé 4 min),
+- **jména detektivů na mapě**: zobrazit, nebo anonymně (výchozí zobrazit; po konci hry se jména ukážou vždy).
+
+Na mapě jsou detektivové červeně a Fantom černě. Tlačítkem „Obnovit výchozí nastavení“ se vše vrátí na výchozí hodnoty.
 
 Na rychlé vyzkoušení stačí nastavit krátké časy, např. 1 min náskok, 5 min hra a odhalení každou minutu.
 
