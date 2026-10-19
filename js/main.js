@@ -59,6 +59,16 @@ document.getElementById('locate').addEventListener('click', () => {
 
 keepScreenOn();
 
+const serverEl = document.getElementById('server');
+// Firebase se načítá zvlášť, aby mapa fungovala, i kdyby se server nepodařilo načíst
+import('./firebase.js')
+  .then(({ connect }) => connect((online, error) => {
+    serverEl.classList.toggle('online', online);
+    serverEl.classList.toggle('offline', !online);
+    serverEl.title = error || (online ? 'Připojeno k serveru' : 'Bez spojení se serverem');
+  }))
+  .catch(() => serverEl.classList.add('offline'));
+
 // Zajistí, že se po každé změně hry načte nejnovější verze
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' });

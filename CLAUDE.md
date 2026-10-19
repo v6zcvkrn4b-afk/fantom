@@ -2,7 +2,7 @@
 
 - Městská hra v reálném světě (GPS), podobná Scotland Yardu. Pravidla jsou v `PRAVIDLA.md`, plán a postup v `PLAN.md`; obojí aktualizuj při změnách.
 - Uživatel není programátor: komunikuj česky, jednoduše, technická rozhodnutí dělej sám a vysvětli je stručně. Ptej se jen na pravidla a obsah.
-- Stack: čisté HTML/CSS/JS (ES moduly), bez buildu a bez Node.js. Mapa je Leaflet 1.9.4 (cdnjs) + OSM dlaždice. Plánovaný backend je Firebase Realtime Database + anonymní auth.
+- Stack: čisté HTML/CSS/JS (ES moduly), bez buildu a bez Node.js. Mapa je Leaflet 1.9.4 (cdnjs) + OSM dlaždice. Backend: Firebase projekt `fantom-9b24b` (Spark/zdarma), Realtime Database v europe-west1 (zatím v uzamčeném režimu, pravidla se nastaví v konzoli nebo přes REST) + anonymní auth. SDK 12.19.0 z gstatic, napojení v `js/firebase.js`.
 - Herní konstanty a hranice území jsou v `js/config.js`.
 - Nasazení: GitHub Pages z větve `main` (root) do repozitáře v6zcvkrn4b-afk/fantom, adresa https://v6zcvkrn4b-afk.github.io/fantom/
 - GitHub CLI je v `~/.local/bin/gh`. Na Macu jsou přihlášené dva účty, pro tento projekt se používá `v6zcvkrn4b-afk` (před pushem ověř `gh auth status`).

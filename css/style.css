@@ -46,6 +46,25 @@ html, body {
   letter-spacing: 2px;
 }
 
+/* Tečka spojení se serverem: šedá = připojuji, zelená = OK, červená = bez spojení */
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+  vertical-align: middle;
+}
+
+.dot.online {
+  background: #22c55e;
+}
+
+.dot.offline {
+  background: var(--danger);
+}
+
 #status {
   color: var(--muted);
   text-align: right;

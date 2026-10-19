@@ -1,0 +1,31 @@
+// Napojení na Firebase: anonymní přihlášení hráče a databáze pro sdílení stavu hry.
+// Tyto údaje nejsou tajné, přístup k datům hlídají pravidla databáze.
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
+import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
+import { getDatabase, ref, onValue } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: 'AIzaSyBNiUVHQX2Egt-sIHEZb9xvrWg8jDdzlB0',
+  authDomain: 'fantom-9b24b.firebaseapp.com',
+  databaseURL: 'https://fantom-9b24b-default-rtdb.europe-west1.firebasedatabase.app',
+  projectId: 'fantom-9b24b',
+  storageBucket: 'fantom-9b24b.firebasestorage.app',
+  messagingSenderId: '854758997134',
+  appId: '1:854758997134:web:2189f59d8bddcd1e0b5ddf',
+};
+
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getDatabase(app);
+
+// Přihlásí hráče anonymně a hlásí, jestli je spojení se serverem živé.
+// onStatus dostane true/false (připojeno), případně text chyby.
+export async function connect(onStatus) {
+  try {
+    await signInAnonymously(auth);
+  } catch (err) {
+    onStatus(false, `Přihlášení selhalo (${err.code})`);
+    return;
+  }
+  onValue(ref(db, '.info/connected'), (snap) => onStatus(snap.val() === true));
+}

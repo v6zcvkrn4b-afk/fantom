@@ -10,7 +10,7 @@
 ## Etapy
 1. ✅ Kostra projektu, GitHub repozitář a zveřejnění na GitHub Pages
 2. ✅ Mapa Šumperka, hranice území, živá GPS poloha, displej se nevypíná
-3. ⬜ Založení Firebase (provede uživatel podle návodu), napojení do aplikace
+3. ✅ Založení Firebase (projekt fantom-9b24b), napojení do aplikace, anonymní přihlášení
 4. ⬜ Lobby: založit hru → kód → připojit se → zvolit roli → start
 5. ⬜ Herní smyčka: náskok, odhalení každé 4 minuty, odpočty
 6. ⬜ Zobrazení na mapě: detektivové (poslední odhalení) a Fantom (poslední + předchozí)
