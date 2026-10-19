@@ -58,3 +58,8 @@ document.getElementById('locate').addEventListener('click', () => {
 });
 
 keepScreenOn();
+
+// Zajistí, že se po každé změně hry načte nejnovější verze
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' });
+}

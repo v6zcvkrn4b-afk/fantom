@@ -22,5 +22,6 @@ js/config.js          pravidla hry (časy) a hranice herního území
 js/gps.js             sledování polohy telefonu
 js/geo.js             výpočty nad mapou (je hráč v území?)
 js/wakelock.js        drží displej rozsvícený
+sw.js                 service worker: vždy načte nejnovější verzi
 icons/                ikona aplikace
 ```
