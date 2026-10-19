@@ -86,7 +86,6 @@ function updateGpsStatus() {
   $('status').classList.toggle('error', !inside);
   $('status').textContent = `${inside ? 'V herním území' : 'MIMO území!'} · přesnost ${Math.round(state.fix.accuracy)} m`;
   const outside = isRunning() && !inside;
-  $('warn').hidden = !outside;
   $('outside').hidden = !outside;
 }
 
@@ -131,12 +130,8 @@ function beep() {
   });
 }
 
-let toastTimer = null;
-function toast(text) {
-  $('toast').textContent = text;
-  $('toast').hidden = false;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { $('toast').hidden = true; }, 5000);
+// Upozornění na odhalení: jen zvuk a vibrace (bez vyskakovací zprávy)
+function notify() {
   beep();
   if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
 }
@@ -167,7 +162,6 @@ function showHome(error) {
   $('hud').hidden = true;
   $('caught').hidden = true;
   $('back-result').hidden = true;
-  $('warn').hidden = true;
   $('outside').hidden = true;
   renderMarkers();
   setArea(autoArea());
@@ -287,8 +281,7 @@ function render() {
   } else {
     $('hud').hidden = true;
     $('caught').hidden = true;
-    $('warn').hidden = true;
-  $('outside').hidden = true;
+    $('outside').hidden = true;
     showScreen(state.reviewing ? null : 'result');
     $('back-result').hidden = !state.reviewing;
     renderResult();
@@ -572,7 +565,7 @@ function tick() {
     else if (!phantom && vis === 'phantom') messages.push('👁️ Fantom teď vidí, kde jsi.');
     else if (!phantom && !messages.length) messages.push('🕵️ Polohy detektivů aktualizovány.');
   }
-  if (messages.length) toast(messages.join(' '));
+  if (messages.length) notify();
   state.lastRevealSeen = { phantom: tl.phantom.index, detective: tl.detective ? tl.detective.index : -1 };
   writeMyReveal(tl, now);
   renderMarkers();

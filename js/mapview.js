@@ -62,12 +62,16 @@ export function createMap(elementId, area) {
         L.polyline(line, { color: PHANTOM, weight: 3, dashArray: '6 8', opacity: 0.8, interactive: false }).addTo(players);
       }
       for (const m of markers) {
+        // Špendlík jako v Mapách Google: hrot ukazuje přesné místo odhalení
+        const color = m.kind === 'phantom' ? PHANTOM : DETECTIVE;
         const icon = L.divIcon({
           className: '',
-          html: `<div class="pin ${m.kind}${m.faded ? ' faded' : ''}">${m.kind === 'phantom' ? '👻' : '🕵️'}</div>`
+          html: `<div class="pin${m.faded ? ' faded' : ''}">`
+            + `<svg viewBox="0 0 36 48" width="36" height="48"><path d="M18 46.5C18 46.5 2.5 29 2.5 17.5a15.5 15.5 0 0 1 31 0C33.5 29 18 46.5 18 46.5Z" fill="${color}" stroke="#fff" stroke-width="2.5"/></svg>`
+            + `<span class="pin-emoji">${m.kind === 'phantom' ? '👻' : '🕵️'}</span></div>`
             + (m.label ? `<div class="pin-label">${escapeHtml(m.label)}</div>` : ''),
-          iconSize: [36, 36],
-          iconAnchor: [18, 18],
+          iconSize: [36, 48],
+          iconAnchor: [18, 47],
         });
         L.marker([m.lat, m.lng], { icon, interactive: false, zIndexOffset: m.faded ? 0 : 500 }).addTo(players);
       }

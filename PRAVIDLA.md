@@ -51,4 +51,4 @@ Na mapě jsou detektivové červeně a Fantom černě. Tlačítkem „Obnovit v�
 Na rychlé vyzkoušení stačí nastavit krátké časy, např. 1 min náskok, 5 min hra a odhalení každou minutu.
 
 ## Otevřené otázky
-- Co se stane, když Fantom opustí území. Zatím hra hráči jen ukáže varování a obrazovka pomalu bliká červeně (návrh: jeho poloha se detektivům ukáže okamžitě).
+- Co se stane, když Fantom opustí území. Zatím hráči obrazovka jen pomalu bliká červeně (návrh: jeho poloha se detektivům ukáže okamžitě).
