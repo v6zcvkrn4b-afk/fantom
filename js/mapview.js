@@ -42,14 +42,11 @@ export function createMap(elementId, area) {
     showMe(fix, isPhantom) {
       const pos = [fix.lat, fix.lng];
       const color = isPhantom ? PHANTOM : DETECTIVE;
+      // Jen tečka, bez kruhu přesnosti
       if (!me) {
-        me = {
-          ring: L.circle(pos, { pane: 'me', radius: fix.accuracy, color, weight: 1, fillOpacity: 0.1, interactive: false }).addTo(map),
-          dot: L.circleMarker(pos, { pane: 'me', radius: 9, color: '#fff', weight: 3, fillColor: color, fillOpacity: 1 }).addTo(map),
-        };
+        me = { dot: L.circleMarker(pos, { pane: 'me', radius: 9, color: '#fff', weight: 3, fillColor: color, fillOpacity: 1 }).addTo(map) };
       } else {
         me.dot.setLatLng(pos).setStyle({ fillColor: color });
-        me.ring.setLatLng(pos).setRadius(fix.accuracy).setStyle({ color });
       }
     },
 
