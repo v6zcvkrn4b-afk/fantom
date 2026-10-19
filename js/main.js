@@ -87,6 +87,7 @@ function updateGpsStatus() {
   $('status').textContent = `${inside ? 'V herním území' : 'MIMO území!'} · přesnost ${Math.round(state.fix.accuracy)} m`;
   const outside = isRunning() && !inside;
   $('outside').hidden = !outside;
+  $('warn').hidden = !outside;
 }
 
 $('locate').addEventListener('click', () => view.centerOnMe());
@@ -163,6 +164,7 @@ function showHome(error) {
   $('caught').hidden = true;
   $('back-result').hidden = true;
   $('outside').hidden = true;
+  $('warn').hidden = true;
   renderMarkers();
   setArea(autoArea());
   showStep('start', error);
@@ -282,6 +284,7 @@ function render() {
     $('hud').hidden = true;
     $('caught').hidden = true;
     $('outside').hidden = true;
+  $('warn').hidden = true;
     showScreen(state.reviewing ? null : 'result');
     $('back-result').hidden = !state.reviewing;
     renderResult();
