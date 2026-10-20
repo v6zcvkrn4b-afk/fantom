@@ -80,21 +80,23 @@ startGps();
 
 // Web polohu zapnout sám nesmí. Hráč bez polohy dostane radu obnovit stránku
 // a návod podle telefonu (okno „Jak povolit polohu“).
+const INAPP = 'Máš-li hru otevřenou přes odkaz v Messengeru, Instagramu, WhatsAppu nebo jiné aplikaci, otevři ji přímo v <b>prohlížeči</b> (Safari, Google Chrome, …) – tyto aplikace polohu nepustí.';
+const RELOAD = 'Vrať se sem a ťukni na <b>Hotovo – obnovit stránku</b>. Když se telefon zeptá na polohu, dej <b>Povolit</b>.';
 const GPS_STEPS = {
   ios: [
+    INAPP,
     '<b>Nastavení</b> → <b>Soukromí a zabezpečení</b> → <b>Polohové služby</b> → přepínač nahoře musí být <b>zapnutý</b>.',
-    'Ve stejném seznamu sjeď dolů na <b>Weby Safari</b> → zaklikni <b>Při používání aplikace</b> a zapni <b>Přesná poloha</b>. (Máš-li hru v Chrome, nastav to samé u <b>Chrome</b>.)',
-    '<b>Nastavení</b> → <b>Aplikace</b> → <b>Safari</b> → <b>Poloha</b> → zaklikni <b>Zeptat se</b> nebo <b>Povolit</b>.',
-    'V Safari na stránce hry ťukni v adresním řádku na <b>aA</b> (nebo ikonu vlevo) → <b>Nastavení webu</b> → <b>Poloha</b> → <b>Povolit</b>.',
-    'Máš-li hru otevřenou přes odkaz v Messengeru, Instagramu nebo WhatsAppu, otevři ji přímo v <b>Safari</b> – tyto aplikace polohu nepustí.',
-    'Vrať se sem a ťukni na <b>Hotovo – obnovit stránku</b>. Když se telefon zeptá na polohu, dej <b>Povolit</b>.',
+    'Ve stejném seznamu sjeď dolů na svůj <b>prohlížeč</b> (u Safari se položka jmenuje <b>Weby Safari</b>, jinak Google Chrome, …) → zaklikni <b>Při používání aplikace</b> a zapni <b>Přesná poloha</b>.',
+    '<b>Nastavení</b> → <b>Aplikace</b> → svůj <b>prohlížeč</b> (Safari, Google Chrome, …) → <b>Poloha</b> → zaklikni <b>Zeptat se</b> nebo <b>Povolit</b>.',
+    'V <b>prohlížeči</b> (Safari, Google Chrome, …) na stránce hry ťukni na ikonu v adresním řádku (<b>aA</b> nebo ikonu vlevo) → <b>Nastavení webu</b> / <b>Oprávnění</b> → <b>Poloha</b> → <b>Povolit</b>.',
+    RELOAD,
   ],
   android: [
+    INAPP,
     'Stáhni lištu shora a zkontroluj, že je zapnutá <b>Poloha</b>.',
-    'V Chrome na stránce hry ťukni na ikonu <b>vlevo od adresy</b> → <b>Oprávnění</b> (nebo <b>Nastavení webu</b>) → <b>Poloha</b> → <b>Povolit</b>.',
-    '<b>Nastavení</b> telefonu → <b>Aplikace</b> → <b>Chrome</b> → <b>Oprávnění</b> → <b>Poloha</b> → zaklikni <b>Povolit jen při používání aplikace</b> a zapni <b>Použít přesnou polohu</b>.',
-    'Máš-li hru otevřenou přes odkaz v Messengeru, Instagramu nebo WhatsAppu, otevři ji přímo v <b>Chrome</b> – tyto aplikace polohu nepustí.',
-    'Vrať se sem a ťukni na <b>Hotovo – obnovit stránku</b>. Když se telefon zeptá na polohu, dej <b>Povolit</b>.',
+    'V <b>prohlížeči</b> (Google Chrome, Samsung Internet, …) na stránce hry ťukni na ikonu <b>vlevo od adresy</b> → <b>Oprávnění</b> (nebo <b>Nastavení webu</b>) → <b>Poloha</b> → <b>Povolit</b>.',
+    '<b>Nastavení</b> telefonu → <b>Aplikace</b> → svůj <b>prohlížeč</b> (Google Chrome, Samsung Internet, …) → <b>Oprávnění</b> → <b>Poloha</b> → zaklikni <b>Povolit jen při používání aplikace</b> a zapni <b>Použít přesnou polohu</b>.',
+    RELOAD,
   ],
 };
 
