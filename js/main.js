@@ -57,6 +57,7 @@ const state = {
   gpsError: null,       // kód poslední chyby GPS (1 = zakázáno)
   gpsSent: null,        // stav polohy naposledy zapsaný do čekárny
   gpsAsked: false,      // hráč už klikl na „Povolit polohu“
+  gpsBlocked: ui.get('gpsBlocked') === '1', // prohlížeč polohu zamítá bez dotazu (opakované zamítnutí)
   perm: null,           // oprávnění k poloze: null (zjišťuje se) | granted | prompt | denied | unknown
   firstFixAt: null,     // kdy přišla první poloha
   lastPreciseAt: null,  // kdy naposledy přišla přesná poloha (do 500 m)
@@ -75,6 +76,8 @@ function onFix(fix) {
   state.fix = { ...fix, receivedAt: Date.now() };
   state.perm = 'granted';
   store.set('gpsGranted', '1');
+  state.gpsBlocked = false;
+  ui.set('gpsBlocked', null);
   if (!state.firstFixAt) state.firstFixAt = Date.now();
   if (fix.accuracy <= PRECISE_M) state.lastPreciseAt = Date.now();
   state.gpsError = null;
@@ -137,8 +140,16 @@ function askGps(button) {
     button.disabled = true;
     button.textContent = 'Zjišťuji…';
   }
+  const askedAt = Date.now();
   requestPosition()
-    .then((f) => { onFix(f); startGps(); }, onGpsError)
+    .then((f) => { onFix(f); startGps(); }, (code) => {
+      // Zamítnuto okamžitě = prohlížeč se ani nezeptal (po opakovaném zamítnutí to dělá Safari)
+      if (code === 1 && Date.now() - askedAt < 700) {
+        state.gpsBlocked = true;
+        ui.set('gpsBlocked', '1');
+      }
+      onGpsError(code);
+    })
     .finally(() => { if (state.game) render(); });
 }
 
@@ -226,6 +237,10 @@ function renderGpsBox() {
   const failed = !gpsOk() && (state.gpsError !== null || state.gpsAsked);
   const imprecise = gpsOk() && !gpsPrecise();
   gpsBox.hidden = !inLobby || gpsReady() || !(failed || imprecise);
+  // Když už se prohlížeč neptá, obnovení stránky nepomůže – rovnou návod
+  const blocked = state.gpsBlocked && !imprecise;
+  $('gps-retry').hidden = blocked;
+  $('gps-blocked').hidden = !blocked;
   if (gpsReady() && !$('gps-modal').hidden) closeGpsModal();
 }
 
