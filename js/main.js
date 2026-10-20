@@ -79,7 +79,11 @@ const gpsOk = () => Boolean(state.fix && Date.now() - state.fix.receivedAt < 600
 // Přesná poloha: prohlížeč nehlásí, jestli je zapnutá, ale přibližná poloha má přesnost
 // v řádu kilometrů – za přesnou bereme takovou, která byla za poslední minutu do 500 m.
 const PRECISE_M = 500;
-const gpsPrecise = () => Boolean(state.lastPreciseAt && Date.now() - state.lastPreciseAt < 60000);
+// Dokud se nepřesnost nepotvrdí (prvních 15 s po první poloze se GPS teprve chytá), bereme polohu jako přesnou.
+const gpsPrecise = () => Boolean(
+  (state.lastPreciseAt && Date.now() - state.lastPreciseAt < 60000)
+  || (state.firstFixAt && Date.now() - state.firstFixAt < 15000),
+);
 // Připraven ke hře = poloha funguje a je přesná
 const gpsReady = () => gpsOk() && gpsPrecise();
 
@@ -144,9 +148,8 @@ function reportGps() {
 // Panel v čekárně pro hráče bez polohy
 function renderGpsBox() {
   const inLobby = state.game?.meta?.status === 'lobby';
-  // Stejný panel i pro nepřesnou polohu; první polohy bývají nepřesné, proto 15 s počkáme
-  const settling = gpsOk() && state.firstFixAt && Date.now() - state.firstFixAt < 15000;
-  $('gps-box').hidden = !inLobby || gpsReady() || settling;
+  // Stejný panel i pro nepřesnou polohu
+  $('gps-box').hidden = !inLobby || gpsReady();
   if (gpsReady()) $('gps-modal').hidden = true;
 }
 
