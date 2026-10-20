@@ -674,3 +674,18 @@ html, body {
   margin-bottom: 10px;
 }
 
+
+/* Tlačítko Povolit polohu u vlastního jména v čekárně */
+#lobby-players .gps-allow {
+  display: inline-block;
+  width: auto;
+  margin: 0 0 0 auto;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #111;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}

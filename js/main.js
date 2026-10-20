@@ -1,6 +1,8 @@
 import { PLAYERS, LIMITS, TIMES } from './config.js';
 import { pickArea, getArea } from './maps.js';
-import { watchPosition, requestPosition, GPS_MESSAGES } from './gps.js';
+import {
+  watchPosition, requestPosition, permissionState, GPS_MESSAGES,
+} from './gps.js';
 import { keepScreenOn } from './wakelock.js';
 import { isInside } from './geo.js';
 import { createMap } from './mapview.js';
@@ -40,6 +42,7 @@ const state = {
   fix: null,            // poslední poloha z GPS
   gpsError: null,       // kód poslední chyby GPS (1 = zakázáno)
   gpsSent: null,        // stav polohy naposledy zapsaný do čekárny
+  gpsAsked: false,      // hráč už klikl na „Povolit polohu“
   firstFixAt: null,     // kdy přišla první poloha
   lastPreciseAt: null,  // kdy naposledy přišla přesná poloha (do 500 m)
   lastRevealSeen: null, // { phantom, detective } – pro upozornění na nové odhalení
@@ -90,7 +93,24 @@ const gpsReady = () => gpsOk() && gpsPrecise();
 function startGps() {
   watchPosition(onFix, onGpsError);
 }
-startGps();
+// Polohu sledujeme sami jen tehdy, když ji už hráč dřív povolil (pak se telefon nic neptá).
+// Jinak čekáme, až v čekárně klikne na „Povolit polohu“ – teprve pak se ukáže dotaz telefonu.
+permissionState().then((s) => {
+  if (s === 'granted') startGps();
+  else $('status').textContent = 'Poloha zatím není povolená';
+});
+
+// Kliknutí na „Povolit polohu“ u vlastního jména v čekárně
+function askGps(button) {
+  state.gpsAsked = true;
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'Zjišťuji…';
+  }
+  requestPosition()
+    .then((f) => { onFix(f); startGps(); }, onGpsError)
+    .finally(() => { if (state.game) render(); });
+}
 
 // Web polohu zapnout sám nesmí. Hráč bez polohy dostane radu obnovit stránku
 // a návod podle telefonu (okno „Jak povolit polohu“).
@@ -148,8 +168,10 @@ function reportGps() {
 // Panel v čekárně pro hráče bez polohy
 function renderGpsBox() {
   const inLobby = state.game?.meta?.status === 'lobby';
-  // Stejný panel i pro nepřesnou polohu
-  $('gps-box').hidden = !inLobby || gpsReady();
+  // Panel s návodem až poté, co povolení selhalo, nebo když je poloha nepřesná
+  const failed = state.gpsError !== null && !gpsOk();
+  const imprecise = gpsOk() && !gpsPrecise();
+  $('gps-box').hidden = !inLobby || gpsReady() || !(failed || imprecise);
   if (gpsReady()) $('gps-modal').hidden = true;
 }
 
@@ -297,19 +319,12 @@ async function busy(button, fn) {
   }
 }
 
-// Ťuknutí na úvodní tlačítka zároveň požádá o polohu (Safari ukáže dotaz jen po ťuknutí)
-function earlyGps() {
-  if (!gpsOk()) requestPosition().then((f) => { onFix(f); startGps(); }, onGpsError);
-}
-
 $('go-create').addEventListener('click', () => {
-  earlyGps();
   home.mode = 'create';
   showStep('name');
 });
 
 $('go-join').addEventListener('click', () => {
-  earlyGps();
   home.mode = 'join';
   showStep('code');
 });
@@ -436,7 +451,20 @@ function renderLobby() {
     dot.className = `gps-dot ${ready ? 'ok' : 'bad'}`;
     dot.title = ready ? 'Poloha povolená' : 'Poloha není povolená';
     name.prepend(dot);
-    li.append(name, role);
+    li.append(name);
+    // U sebe: tlačítko, které teprve vyvolá dotaz telefonu na polohu
+    if (uid === state.uid && !gpsOk()) {
+      const allow = document.createElement('button');
+      allow.type = 'button';
+      allow.className = 'gps-allow';
+      allow.textContent = 'Povolit polohu';
+      allow.addEventListener('click', (e) => {
+        e.stopPropagation();
+        askGps(allow);
+      });
+      li.append(allow);
+    }
+    li.append(role);
     li.classList.toggle('is-phantom', phantom);
     if (isHost) {
       li.classList.add('pickable');

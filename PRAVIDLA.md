@@ -30,8 +30,9 @@ Mapa se vybere automaticky podle polohy toho, kdo hru zakládá (mapa, ve které
 - **Odpočet do dalšího odhalení a do konce hry.**
 
 ## Poloha v čekárně
+- Telefon se na polohu sám nezeptá. Hráč, který ji ještě nepovolil, má u svého jména v čekárně tlačítko **Povolit polohu** – teprve po kliknutí se ukáže dotaz telefonu. Kdo polohu povolil už dřív, nemusí dělat nic.
 - U každého hráče v čekárně je puntík: 🟢 poloha povolená a funkční, 🔴 poloha chybí.
-- Hráč bez polohy vidí panel „Poloha NENÍ povolena – bez ní nejde hrát“ s tlačítkem **Obnovit stránku** a tlačítkem **Jak povolit polohu**, které otevře návod podle telefonu (iPhone / Android).
+- Když povolení selže, hráč vidí panel „Poloha NENÍ povolena – bez ní nejde hrát“ s tlačítkem **Obnovit stránku** a tlačítkem **Jak povolit polohu**, které otevře návod podle telefonu (iPhone / Android).
 - Červený puntík a stejný panel „Poloha NENÍ povolena“ dostane i hráč, který má polohu zapnutou, ale ne **přesnou** (přesnost horší než 500 m – typicky vypnutá „Přesná poloha“).
 - Hru nejde spustit, dokud nemají přesnou polohu všichni.
 - Kdykoli jde polohu zkusit povolit znovu ťuknutím na stav polohy v horní liště.
