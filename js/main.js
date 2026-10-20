@@ -73,6 +73,11 @@ function onFix(fix) {
 
 function onGpsError(code) {
   state.gpsError = code;
+  if (code === 1) {
+    // Poloha je teď zakázaná – příště zase nabídnout tlačítko
+    store.set('gpsGranted', null);
+    if (state.perm === 'granted') state.perm = 'denied';
+  }
   if (!gpsOk()) {
     $('status').classList.add('error');
     $('status').textContent = `${GPS_MESSAGES[code] || 'Chyba GPS'} – klikni sem`;
@@ -98,10 +103,11 @@ function startGps() {
 }
 // Polohu sledujeme sami jen tehdy, když ji už hráč dřív povolil (pak se telefon nic neptá).
 // Jinak čekáme, až v čekárně klikne na „Povolit polohu“ – teprve pak se ukáže dotaz telefonu.
-// Když prohlížeč stav oprávnění neprozradí, pomůže, že poloha v tomto telefonu už dřív fungovala.
+// Safari na iPhonu hlásí „prompt“ i při povolené poloze, proto rozhoduje i to,
+// že poloha v tomto telefonu už dřív fungovala (pak se telefon obvykle už neptá).
 permissionState().then((s) => {
   state.perm = s;
-  if (s === 'granted' || (s === 'unknown' && store.get('gpsGranted'))) {
+  if (s === 'granted' || (s !== 'denied' && store.get('gpsGranted'))) {
     state.perm = 'granted';
     startGps();
   } else {
