@@ -86,19 +86,36 @@
       <p id="lobby-hint" class="muted"></p>
       <ul id="lobby-players"></ul>
       <div id="gps-box" hidden>
-        <p id="gps-msg"></p>
-        <button id="gps-allow" type="button" class="primary">Povolit polohu</button>
-        <p id="gps-result" class="small" hidden></p>
-        <div id="gps-help" class="small" hidden>
-          <ol id="gps-steps"></ol>
-          <button id="gps-reload" type="button">Hotovo – obnovit stránku</button>
-        </div>
+        <p class="gps-title">🔴 Poloha je zakázaná – bez ní nejde hrát.</p>
+        <p>Zkus stránku obnovit a polohu povolit.</p>
+        <button id="gps-reload" type="button" class="primary">Obnovit stránku</button>
+        <p class="gps-more">Pokud to nefunguje:</p>
+        <button id="gps-howto" type="button">Jak povolit polohu</button>
       </div>
       <div id="settings" hidden></div>
       <p id="lobby-times" class="muted small"></p>
       <button id="start" type="button" class="primary" hidden>Spustit hru</button>
       <p id="lobby-wait" class="muted center" hidden>Čeká se, až zakladatel hru spustí…</p>
       <button id="leave" type="button" class="link">Opustit hru</button>
+    </div>
+  </section>
+
+  <!-- Návod na povolení polohy -->
+  <section id="gps-modal" class="screen modal" hidden>
+    <div class="card">
+      <h2>Jak povolit polohu</h2>
+      <div id="gps-pick">
+        <p class="muted">Jaký máš telefon?</p>
+        <button type="button" class="primary" data-phone="ios">iPhone</button>
+        <button type="button" class="primary" data-phone="android">Android</button>
+      </div>
+      <div id="gps-guide" hidden>
+        <p class="muted">Zkontroluj postupně a co je potřeba, zaklikni:</p>
+        <ol id="gps-steps"></ol>
+        <button id="gps-reload2" type="button" class="primary">Hotovo – obnovit stránku</button>
+        <button id="gps-back" type="button">Zpět na výběr telefonu</button>
+      </div>
+      <button id="gps-close" type="button" class="link">Zavřít</button>
     </div>
   </section>
 

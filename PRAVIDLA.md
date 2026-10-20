@@ -31,7 +31,7 @@ Mapa se vybere automaticky podle polohy toho, kdo hru zakládá (mapa, ve které
 
 ## Poloha v čekárně
 - U každého hráče v čekárně je puntík: 🟢 poloha povolená a funkční, 🔴 poloha chybí.
-- Hráč bez polohy vidí panel s tlačítkem **Povolit polohu** a při zakázané poloze návod pro iPhone a Android.
+- Hráč bez polohy vidí panel „Poloha je zakázaná – bez ní nejde hrát“ s tlačítkem **Obnovit stránku** a tlačítkem **Jak povolit polohu**, které otevře návod podle telefonu (iPhone / Android).
 - Hru nejde spustit, dokud nemají polohu všichni.
 - Kdykoli jde polohu zkusit povolit znovu ťuknutím na stav polohy v horní liště.
 

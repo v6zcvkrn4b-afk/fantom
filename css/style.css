@@ -639,27 +639,37 @@ html, body {
   margin: 0 0 8px;
 }
 
-#gps-help p {
-  margin: 8px 0 0;
-}
 
 #status {
   cursor: pointer;
 }
 
-#gps-result.ok {
-  color: #22c55e;
+
+#gps-box .gps-title {
+  font-weight: 600;
 }
 
-#gps-result.error {
-  color: #fca5a5;
+#gps-box .gps-more {
+  margin: 16px 0 0;
+  color: var(--muted);
+}
+
+/* Okno s návodem na povolení polohy */
+.screen.modal {
+  z-index: 3000;
+}
+
+.modal h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
 }
 
 #gps-steps {
   margin: 8px 0;
   padding-left: 20px;
+  line-height: 1.45;
 }
 
 #gps-steps li {
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }

@@ -1,8 +1,6 @@
 import { PLAYERS, LIMITS, TIMES } from './config.js';
 import { pickArea, getArea } from './maps.js';
-import {
-  watchPosition, requestPosition, permissionState, GPS_MESSAGES,
-} from './gps.js';
+import { watchPosition, requestPosition, GPS_MESSAGES } from './gps.js';
 import { keepScreenOn } from './wakelock.js';
 import { isInside } from './geo.js';
 import { createMap } from './mapview.js';
@@ -80,74 +78,46 @@ function startGps() {
 }
 startGps();
 
-// Ruční povolení polohy. Web polohu zapnout sám nesmí – umí jen vyvolat dotaz prohlížeče.
-// Když je poloha v telefonu zakázaná, dotaz se už neukáže; pak hráč dostane návod pro svůj telefon.
-const ua = navigator.userAgent;
-const DEVICE = /FBAN|FBAV|Instagram|Messenger|Line\/|WhatsApp|Snapchat/i.test(ua) ? 'inapp'
-  : (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) ? 'ios'
-    : /Android/.test(ua) ? 'android' : 'other';
-const isSafari = DEVICE === 'ios' && !/CriOS|FxiOS|EdgiOS/.test(ua);
-
+// Web polohu zapnout sám nesmí. Hráč bez polohy dostane radu obnovit stránku
+// a návod podle telefonu (okno „Jak povolit polohu“).
 const GPS_STEPS = {
-  inapp: [
-    'Hra je otevřená uvnitř jiné aplikace (Messenger, Instagram…), která polohu nepustí.',
-    'Ťukni na ⋯ nebo ikonu sdílení a vyber „Otevřít v Safari“ / „Otevřít v prohlížeči“.',
-  ],
   ios: [
-    'Otevři <b>Nastavení</b> → <b>Soukromí a zabezpečení</b> → <b>Polohové služby</b> a zapni je.',
-    `V tom samém seznamu níž ťukni na <b>${isSafari ? 'Weby Safari' : 'svůj prohlížeč (Chrome…)'}</b> a vyber <b>Při používání aplikace</b>.`,
-    ...(isSafari ? ['Zpět v Nastavení → <b>Aplikace</b> → <b>Safari</b> → <b>Poloha</b> → <b>Zeptat se</b> nebo <b>Povolit</b>.'] : []),
-    'Vrať se sem a ťukni na <b>Hotovo – obnovit stránku</b>, pak na <b>Povolit polohu</b>.',
+    '<b>Nastavení</b> → <b>Soukromí a zabezpečení</b> → <b>Polohové služby</b> → přepínač nahoře musí být <b>zapnutý</b>.',
+    'Ve stejném seznamu sjeď dolů na <b>Weby Safari</b> → zaklikni <b>Při používání aplikace</b> a zapni <b>Přesná poloha</b>. (Máš-li hru v Chrome, nastav to samé u <b>Chrome</b>.)',
+    '<b>Nastavení</b> → <b>Aplikace</b> → <b>Safari</b> → <b>Poloha</b> → zaklikni <b>Zeptat se</b> nebo <b>Povolit</b>.',
+    'V Safari na stránce hry ťukni v adresním řádku na <b>aA</b> (nebo ikonu vlevo) → <b>Nastavení webu</b> → <b>Poloha</b> → <b>Povolit</b>.',
+    'Máš-li hru otevřenou přes odkaz v Messengeru, Instagramu nebo WhatsAppu, otevři ji přímo v <b>Safari</b> – tyto aplikace polohu nepustí.',
+    'Vrať se sem a ťukni na <b>Hotovo – obnovit stránku</b>. Když se telefon zeptá na polohu, dej <b>Povolit</b>.',
   ],
   android: [
-    'Ťukni na ikonu <b>vlevo od adresy</b> stránky (zámek / posuvníky) → <b>Oprávnění</b> nebo <b>Nastavení webu</b> → <b>Poloha</b> → <b>Povolit</b>.',
-    'Zkontroluj, že máš v telefonu zapnutou <b>Polohu</b> (rychlé nastavení – stáhni lištu shora).',
-    'Ťukni na <b>Hotovo – obnovit stránku</b>.',
-  ],
-  other: [
-    'V prohlížeči povol této stránce přístup k poloze (ikona vlevo od adresy).',
-    'Ťukni na <b>Hotovo – obnovit stránku</b>.',
+    'Stáhni lištu shora a zkontroluj, že je zapnutá <b>Poloha</b>.',
+    'V Chrome na stránce hry ťukni na ikonu <b>vlevo od adresy</b> → <b>Oprávnění</b> (nebo <b>Nastavení webu</b>) → <b>Poloha</b> → <b>Povolit</b>.',
+    '<b>Nastavení</b> telefonu → <b>Aplikace</b> → <b>Chrome</b> → <b>Oprávnění</b> → <b>Poloha</b> → zaklikni <b>Povolit jen při používání aplikace</b> a zapni <b>Použít přesnou polohu</b>.',
+    'Máš-li hru otevřenou přes odkaz v Messengeru, Instagramu nebo WhatsAppu, otevři ji přímo v <b>Chrome</b> – tyto aplikace polohu nepustí.',
+    'Vrať se sem a ťukni na <b>Hotovo – obnovit stránku</b>. Když se telefon zeptá na polohu, dej <b>Povolit</b>.',
   ],
 };
 
-function showGpsHelp() {
-  $('gps-steps').innerHTML = GPS_STEPS[DEVICE].map((t) => `<li>${t}</li>`).join('');
-  $('gps-help').hidden = false;
+function openGpsModal() {
+  $('gps-pick').hidden = false;
+  $('gps-guide').hidden = true;
+  $('gps-modal').hidden = false;
 }
-
-function gpsResult(text, ok) {
-  $('gps-result').textContent = text;
-  $('gps-result').className = `small ${ok ? 'ok' : 'error'}`;
-  $('gps-result').hidden = false;
-}
-
-async function askForGps() {
-  if (gpsOk()) return;
-  $('gps-allow').disabled = true;
-  $('gps-allow').textContent = 'Čekám na odpověď telefonu…';
-  try {
-    onFix(await requestPosition());
-    startGps();
-    gpsResult('✅ Poloha funguje.', true);
-  } catch (code) {
-    onGpsError(code);
-    if (code === 1 || DEVICE === 'inapp') {
-      gpsResult('Telefon polohu zablokoval a dotaz už neukáže. Povol ji podle kroků níže:', false);
-      showGpsHelp();
-    } else if (code === 3 || code === 2) {
-      gpsResult('Polohu se zatím nepodařilo zjistit (slabý signál?). Jdi na chvíli ven nebo k oknu a zkus to znovu.', false);
-    } else {
-      gpsResult('Tento prohlížeč polohu nepodporuje. Otevři hru v Safari nebo Chrome.', false);
-    }
-  } finally {
-    $('gps-allow').disabled = false;
-    $('gps-allow').textContent = 'Povolit polohu';
-    renderGpsBox();
-  }
-}
-$('gps-allow').addEventListener('click', askForGps);
+document.querySelectorAll('[data-phone]').forEach((b) => b.addEventListener('click', () => {
+  $('gps-steps').innerHTML = GPS_STEPS[b.dataset.phone].map((t) => `<li>${t}</li>`).join('');
+  $('gps-pick').hidden = true;
+  $('gps-guide').hidden = false;
+}));
+$('gps-howto').addEventListener('click', openGpsModal);
+$('gps-back').addEventListener('click', openGpsModal);
+$('gps-close').addEventListener('click', () => { $('gps-modal').hidden = true; });
 $('gps-reload').addEventListener('click', () => window.location.reload());
-$('status').addEventListener('click', () => { if (!gpsOk()) askForGps(); });
+$('gps-reload2').addEventListener('click', () => window.location.reload());
+
+// Ťuknutí na stav polohy nahoře zkusí polohu získat znovu (prohlížeč případně ukáže dotaz)
+$('status').addEventListener('click', () => {
+  if (!gpsOk()) requestPosition().then((f) => { onFix(f); startGps(); }, onGpsError);
+});
 
 // Zapíše do čekárny, jestli mám polohu (kvůli zelenému/červenému puntíku)
 function reportGps() {
@@ -160,21 +130,10 @@ function reportGps() {
 }
 
 // Panel v čekárně pro hráče bez polohy
-async function renderGpsBox() {
+function renderGpsBox() {
   const inLobby = state.game?.meta?.status === 'lobby';
-  if (!inLobby || gpsOk()) {
-    $('gps-box').hidden = true;
-    $('gps-result').hidden = true;
-    $('gps-help').hidden = true;
-    return;
-  }
-  const perm = await permissionState();
-  const denied = state.gpsError === 1 || perm === 'denied' || DEVICE === 'inapp';
-  $('gps-box').hidden = false;
-  $('gps-msg').textContent = denied
-    ? '🔴 Poloha je v telefonu zakázaná. Bez ní nejde hrát.'
-    : '🔴 Hra potřebuje tvoji polohu. Ťukni na tlačítko a v dotazu telefonu dej „Povolit“.';
-  if (denied) showGpsHelp();
+  $('gps-box').hidden = !inLobby || gpsOk();
+  if (gpsOk()) $('gps-modal').hidden = true;
 }
 
 // Kontrola každých 5 s (poloha mohla přestat chodit). Když telefon stojí, nemusí
