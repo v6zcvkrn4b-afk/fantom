@@ -627,7 +627,8 @@ html, body {
   background: var(--danger);
 }
 
-#gps-box {
+#gps-box,
+#gps-precise-box {
   margin: 12px 0;
   padding: 12px 14px;
   border: 1px solid var(--danger);
@@ -635,7 +636,8 @@ html, body {
   background: rgba(239, 68, 68, 0.1);
 }
 
-#gps-box p {
+#gps-box p,
+#gps-precise-box p {
   margin: 0 0 8px;
 }
 
@@ -645,7 +647,8 @@ html, body {
 }
 
 
-#gps-box .gps-title {
+#gps-box .gps-title,
+#gps-precise-box .gps-title {
   font-weight: 600;
 }
 

@@ -40,6 +40,8 @@ const state = {
   fix: null,            // poslední poloha z GPS
   gpsError: null,       // kód poslední chyby GPS (1 = zakázáno)
   gpsSent: null,        // stav polohy naposledy zapsaný do čekárny
+  firstFixAt: null,     // kdy přišla první poloha
+  lastPreciseAt: null,  // kdy naposledy přišla přesná poloha (do 500 m)
   lastRevealSeen: null, // { phantom, detective } – pro upozornění na nové odhalení
   markersKey: '',
   writing: new Set(),   // odhalení, která právě zapisujeme
@@ -53,6 +55,8 @@ const isRunning = () => state.game?.meta?.status === 'running';
 // ---------- GPS ----------
 function onFix(fix) {
   state.fix = { ...fix, receivedAt: Date.now() };
+  if (!state.firstFixAt) state.firstFixAt = Date.now();
+  if (fix.accuracy <= PRECISE_M) state.lastPreciseAt = Date.now();
   state.gpsError = null;
   if (!state.game) setArea(autoArea());
   view.showMe(fix, isPhantom());
@@ -70,8 +74,14 @@ function onGpsError(code) {
   reportGps();
 }
 
-// Poloha je „v pořádku“, když přišla za poslední minutu
+// Poloha „funguje“, když přišla za poslední minutu
 const gpsOk = () => Boolean(state.fix && Date.now() - state.fix.receivedAt < 60000);
+// Přesná poloha: prohlížeč nehlásí, jestli je zapnutá, ale přibližná poloha má přesnost
+// v řádu kilometrů – za přesnou bereme takovou, která byla za poslední minutu do 500 m.
+const PRECISE_M = 500;
+const gpsPrecise = () => Boolean(state.lastPreciseAt && Date.now() - state.lastPreciseAt < 60000);
+// Připraven ke hře = poloha funguje a je přesná
+const gpsReady = () => gpsOk() && gpsPrecise();
 
 function startGps() {
   watchPosition(onFix, onGpsError);
@@ -115,6 +125,7 @@ $('gps-back').addEventListener('click', openGpsModal);
 $('gps-close').addEventListener('click', () => { $('gps-modal').hidden = true; });
 $('gps-reload').addEventListener('click', () => window.location.reload());
 $('gps-reload2').addEventListener('click', () => window.location.reload());
+$('gps-reload3').addEventListener('click', () => window.location.reload());
 
 // Ťuknutí na stav polohy nahoře zkusí polohu získat znovu (prohlížeč případně ukáže dotaz)
 $('status').addEventListener('click', () => {
@@ -124,7 +135,7 @@ $('status').addEventListener('click', () => {
 // Zapíše do čekárny, jestli mám polohu (kvůli zelenému/červenému puntíku)
 function reportGps() {
   if (!state.api || state.game?.meta?.status !== 'lobby') return;
-  const ok = gpsOk();
+  const ok = gpsReady();
   const stored = state.game.players?.[state.uid]?.gps;
   if (stored === ok && state.gpsSent === ok) return;
   state.gpsSent = ok;
@@ -135,6 +146,9 @@ function reportGps() {
 function renderGpsBox() {
   const inLobby = state.game?.meta?.status === 'lobby';
   $('gps-box').hidden = !inLobby || gpsOk();
+  // Návod na přesnou polohu až po chvíli (první polohy bývají nepřesné, než se GPS chytí)
+  const settling = state.firstFixAt && Date.now() - state.firstFixAt < 15000;
+  $('gps-precise-box').hidden = !inLobby || !gpsOk() || gpsPrecise() || settling;
   if (gpsOk()) $('gps-modal').hidden = true;
 }
 
@@ -417,7 +431,7 @@ function renderLobby() {
     role.className = `chip ${phantom ? 'phantom' : 'detective'}`;
     role.textContent = phantom ? 'FANTOM' : 'DETEKTIV';
     const dot = document.createElement('span');
-    const ready = uid === state.uid ? gpsOk() : player.gps === true;
+    const ready = uid === state.uid ? gpsReady() : player.gps === true;
     dot.className = `gps-dot ${ready ? 'ok' : 'bad'}`;
     dot.title = ready ? 'Poloha povolená' : 'Poloha není povolená';
     name.prepend(dot);
@@ -438,7 +452,7 @@ function renderLobby() {
   settingsUi.update(t);
   $('settings').hidden = false;
   // Hru nejde spustit, dokud všichni nemají polohu
-  const noGps = players.filter(([uid, p]) => (uid === state.uid ? !gpsOk() : p.gps !== true)).map(([, p]) => p.name);
+  const noGps = players.filter(([uid, p]) => (uid === state.uid ? !gpsReady() : p.gps !== true)).map(([, p]) => p.name);
   const notes = [];
   if (noGps.length) notes.push(`Čeká se na polohu: ${noGps.join(', ')}.`);
   if (phantomChosen && detectives < PLAYERS.minDetectives) notes.push(`Doporučeno je aspoň ${PLAYERS.minDetectives} detektivů (teď ${detectives}).`);

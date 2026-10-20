@@ -85,12 +85,18 @@
       <div id="lobby-code" class="code"></div>
       <p id="lobby-hint" class="muted"></p>
       <ul id="lobby-players"></ul>
-      <div id="gps-box" hidden>
+      <div id="gps-box" class="gps-panel" hidden>
         <p class="gps-title">🔴 Poloha NENÍ povolena – bez ní nejde hrát.</p>
         <p>Zkus obnovit stránku a povolit polohu.</p>
         <button id="gps-reload" type="button" class="primary">Obnovit stránku</button>
         <p class="gps-more">Pokud to stále nejde:</p>
         <button id="gps-howto" type="button" class="primary">Jak povolit polohu</button>
+      </div>
+      <div id="gps-precise-box" class="gps-panel" hidden>
+        <p class="gps-title">🔴 Poloha NENÍ přesná – zapni přesnou polohu.</p>
+        <p class="small"><b>iPhone:</b> Nastavení → Soukromí a zabezpečení → Polohové služby → prohlížeč (Safari, Google, …) → zapni <b>Přesná poloha</b>.</p>
+        <p class="small"><b>Android:</b> Nastavení → Aplikace → prohlížeč (Google, Samsung Internet, …) → Oprávnění → Poloha → zapni <b>Použít přesnou polohu</b>.</p>
+        <button id="gps-reload3" type="button" class="primary">Obnovit stránku</button>
       </div>
       <div id="settings" hidden></div>
       <p id="lobby-times" class="muted small"></p>
