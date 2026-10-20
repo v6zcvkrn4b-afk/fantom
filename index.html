@@ -93,10 +93,11 @@
         <button id="gps-howto" type="button" class="primary">Jak povolit polohu</button>
       </div>
       <div id="gps-precise-box" class="gps-panel" hidden>
-        <p class="gps-title">🔴 Poloha NENÍ přesná – zapni přesnou polohu.</p>
-        <p class="small"><b>iPhone:</b> Nastavení → Soukromí a zabezpečení → Polohové služby → prohlížeč (Safari, Google, …) → zapni <b>Přesná poloha</b>.</p>
-        <p class="small"><b>Android:</b> Nastavení → Aplikace → prohlížeč (Google, Samsung Internet, …) → Oprávnění → Poloha → zapni <b>Použít přesnou polohu</b>.</p>
+        <p class="gps-title">🔴 Poloha NENÍ přesná – bez ní nejde hrát.</p>
+        <p>Zkus obnovit stránku a zapnout přesnou polohu.</p>
         <button id="gps-reload3" type="button" class="primary">Obnovit stránku</button>
+        <p class="gps-more">Pokud to stále nejde:</p>
+        <button id="gps-howto2" type="button" class="primary">Jak zapnout přesnou polohu</button>
       </div>
       <div id="settings" hidden></div>
       <p id="lobby-times" class="muted small"></p>
@@ -109,7 +110,7 @@
   <!-- Návod na povolení polohy -->
   <section id="gps-modal" class="screen modal" hidden>
     <div class="card">
-      <h2>Jak povolit polohu</h2>
+      <h2 id="gps-modal-title">Jak povolit polohu</h2>
       <div id="gps-pick">
         <p class="muted">Jaký máš telefon?</p>
         <button type="button" class="primary" data-phone="ios">iPhone</button>
