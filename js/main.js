@@ -169,7 +169,7 @@ function reportGps() {
 function renderGpsBox() {
   const inLobby = state.game?.meta?.status === 'lobby';
   // Panel s návodem až poté, co povolení selhalo, nebo když je poloha nepřesná
-  const failed = state.gpsError !== null && !gpsOk();
+  const failed = !gpsOk() && (state.gpsError !== null || state.gpsAsked);
   const imprecise = gpsOk() && !gpsPrecise();
   $('gps-box').hidden = !inLobby || gpsReady() || !(failed || imprecise);
   if (gpsReady()) $('gps-modal').hidden = true;
@@ -453,7 +453,7 @@ function renderLobby() {
     name.prepend(dot);
     li.append(name);
     // U sebe: tlačítko, které teprve vyvolá dotaz telefonu na polohu
-    if (uid === state.uid && !gpsOk()) {
+    if (uid === state.uid && !gpsOk() && !state.gpsAsked) {   // jen do prvního kliknutí; pak už pomůže jen návod
       const allow = document.createElement('button');
       allow.type = 'button';
       allow.className = 'gps-allow';
