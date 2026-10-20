@@ -62,6 +62,11 @@ export function watchGame(code, callback) {
   return onValue(gameRef(code), (snap) => callback(snap.val()));
 }
 
+// V čekárně: má hráč povolenou a funkční polohu?
+export function setGpsReady(code, uid, ok) {
+  return update(gameRef(code, `players/${uid}`), { gps: ok });
+}
+
 export function setPhantom(code, uid) {
   return update(gameRef(code, 'meta'), { phantomUid: uid });
 }

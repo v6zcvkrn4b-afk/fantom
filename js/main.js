@@ -1,6 +1,8 @@
 import { PLAYERS, LIMITS, TIMES } from './config.js';
 import { pickArea, getArea } from './maps.js';
-import { watchPosition } from './gps.js';
+import {
+  watchPosition, requestPosition, permissionState, GPS_MESSAGES,
+} from './gps.js';
 import { keepScreenOn } from './wakelock.js';
 import { isInside } from './geo.js';
 import { createMap } from './mapview.js';
@@ -38,6 +40,8 @@ const state = {
   game: null,
   unwatch: null,
   fix: null,            // poslední poloha z GPS
+  gpsError: null,       // kód poslední chyby GPS (1 = zakázáno)
+  gpsSent: null,        // stav polohy naposledy zapsaný do čekárny
   lastRevealSeen: null, // { phantom, detective } – pro upozornění na nové odhalení
   markersKey: '',
   writing: new Set(),   // odhalení, která právě zapisujeme
@@ -49,19 +53,92 @@ const isPhantom = () => Boolean(state.game?.meta?.phantomUid && state.game.meta.
 const isRunning = () => state.game?.meta?.status === 'running';
 
 // ---------- GPS ----------
-watchPosition(
-  (fix) => {
-    state.fix = fix;
-    if (!state.game) setArea(autoArea());
-    view.showMe(fix, isPhantom());
-    updateGpsStatus();
-    tick();
-  },
-  (message) => {
+function onFix(fix) {
+  state.fix = { ...fix, receivedAt: Date.now() };
+  state.gpsError = null;
+  if (!state.game) setArea(autoArea());
+  view.showMe(fix, isPhantom());
+  updateGpsStatus();
+  reportGps();
+  tick();
+}
+
+function onGpsError(code) {
+  state.gpsError = code;
+  if (!gpsOk()) {
     $('status').classList.add('error');
-    $('status').textContent = message;
-  },
-);
+    $('status').textContent = `${GPS_MESSAGES[code] || 'Chyba GPS'} – ťukni sem`;
+  }
+  reportGps();
+}
+
+// Poloha je „v pořádku“, když přišla za poslední minutu
+const gpsOk = () => Boolean(state.fix && Date.now() - state.fix.receivedAt < 60000);
+
+function startGps() {
+  watchPosition(onFix, onGpsError);
+}
+startGps();
+
+// Ruční povolení polohy (tlačítko / ťuknutí na stav nahoře): po ťuknutí se prohlížeč znovu zeptá
+async function askForGps() {
+  $('gps-allow').disabled = true;
+  $('gps-allow').textContent = 'Zjišťuji polohu…';
+  try {
+    onFix(await requestPosition());
+    startGps();
+  } catch (code) {
+    onGpsError(code);
+  } finally {
+    $('gps-allow').disabled = false;
+    $('gps-allow').textContent = 'Povolit polohu';
+    renderGpsBox();
+  }
+}
+$('gps-allow').addEventListener('click', askForGps);
+$('status').addEventListener('click', () => { if (!gpsOk()) askForGps(); });
+
+// Zapíše do čekárny, jestli mám polohu (kvůli zelenému/červenému puntíku)
+function reportGps() {
+  if (!state.api || state.game?.meta?.status !== 'lobby') return;
+  const ok = gpsOk();
+  const stored = state.game.players?.[state.uid]?.gps;
+  if (stored === ok && state.gpsSent === ok) return;
+  state.gpsSent = ok;
+  state.api.setGpsReady(state.code, state.uid, ok).catch(() => { state.gpsSent = null; });
+}
+
+// Panel v čekárně pro hráče bez polohy
+async function renderGpsBox() {
+  const inLobby = state.game?.meta?.status === 'lobby';
+  if (!inLobby || gpsOk()) {
+    $('gps-box').hidden = true;
+    return;
+  }
+  const perm = await permissionState();
+  const denied = state.gpsError === 1 || perm === 'denied';
+  $('gps-box').hidden = false;
+  $('gps-msg').textContent = denied
+    ? '🔴 Poloha je zakázaná. Bez ní nejde hrát – povol ji podle návodu níže.'
+    : '🔴 Hra potřebuje tvoji polohu. Ťukni na tlačítko a v dotazu prohlížeče dej „Povolit“.';
+  $('gps-help').hidden = !denied;
+}
+
+// Kontrola každých 5 s (poloha mohla přestat chodit). Když telefon stojí, nemusí
+// sledování posílat nové polohy – po 25 s si ji proto vyžádáme sami (bez dotazu, je-li povolená).
+let refreshing = false;
+setInterval(() => {
+  if (state.fix && Date.now() - state.fix.receivedAt > 25000 && !refreshing && state.gpsError !== 1) {
+    refreshing = true;
+    requestPosition().then(onFix, onGpsError).finally(() => { refreshing = false; });
+  }
+  if (state.fix && !gpsOk()) {
+    $('status').classList.add('error');
+    $('status').textContent = 'Poloha se neaktualizuje – ťukni sem';
+  }
+  reportGps();
+  if (state.game?.meta?.status === 'lobby') renderGpsBox();
+}, 5000);
 
 // Mapu jde vynutit v adrese, např. …/fantom/?mapa=brno (na prohlédnutí jiného města)
 const forcedMap = new URLSearchParams(window.location.search).get('mapa');
@@ -240,7 +317,7 @@ $('name').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('name-ne
 function openGame(code) {
   if (state.unwatch) state.unwatch();
   Object.assign(state, {
-    code, game: null, lastRevealSeen: null, markersKey: '', writing: new Set(), escapeSent: false, reviewing: false,
+    code, game: null, gpsSent: null, lastRevealSeen: null, markersKey: '', writing: new Set(), escapeSent: false, reviewing: false,
   });
   store.set('code', code);
   state.unwatch = state.api.watchGame(code, (game) => {
@@ -318,6 +395,11 @@ function renderLobby() {
     const phantom = uid === meta.phantomUid;
     role.className = `chip ${phantom ? 'phantom' : 'detective'}`;
     role.textContent = phantom ? 'FANTOM' : 'DETEKTIV';
+    const dot = document.createElement('span');
+    const ready = uid === state.uid ? gpsOk() : player.gps === true;
+    dot.className = `gps-dot ${ready ? 'ok' : 'bad'}`;
+    dot.title = ready ? 'Poloha povolená' : 'Poloha není povolená';
+    name.prepend(dot);
     li.append(name, role);
     li.classList.toggle('is-phantom', phantom);
     if (isHost) {
@@ -334,12 +416,17 @@ function renderLobby() {
   }
   settingsUi.update(t);
   $('settings').hidden = false;
-  $('lobby-times').textContent = phantomChosen && detectives < PLAYERS.minDetectives
-    ? `Doporučeno je aspoň ${PLAYERS.minDetectives} detektivů (teď ${detectives}).`
-    : '';
+  // Hru nejde spustit, dokud všichni nemají polohu
+  const noGps = players.filter(([uid, p]) => (uid === state.uid ? !gpsOk() : p.gps !== true)).map(([, p]) => p.name);
+  const notes = [];
+  if (noGps.length) notes.push(`Čeká se na polohu: ${noGps.join(', ')}.`);
+  if (phantomChosen && detectives < PLAYERS.minDetectives) notes.push(`Doporučeno je aspoň ${PLAYERS.minDetectives} detektivů (teď ${detectives}).`);
+  $('lobby-times').textContent = notes.join(' ');
 
   $('start').hidden = !isHost;
-  $('start').disabled = !(phantomChosen && detectives >= 1);
+  $('start').disabled = !(phantomChosen && detectives >= 1 && noGps.length === 0);
+  reportGps();
+  renderGpsBox();
   $('lobby-wait').hidden = isHost;
 }
 

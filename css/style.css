@@ -608,3 +608,41 @@ html, body {
   0%, 100% { opacity: 0.15; }
   50% { opacity: 1; }
 }
+
+/* Puntík polohy u hráče v čekárně */
+.gps-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 8px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.gps-dot.ok {
+  background: #22c55e;
+}
+
+.gps-dot.bad {
+  background: var(--danger);
+}
+
+#gps-box {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--danger);
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+#gps-box p {
+  margin: 0 0 8px;
+}
+
+#gps-help p {
+  margin: 8px 0 0;
+}
+
+#status {
+  cursor: pointer;
+}

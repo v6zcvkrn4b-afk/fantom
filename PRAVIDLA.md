@@ -29,6 +29,12 @@ Mapa se vybere automaticky podle polohy toho, kdo hru zakládá (mapa, ve které
 - **Hranice herního území:** vyznačená na mapě.
 - **Odpočet do dalšího odhalení a do konce hry.**
 
+## Poloha v čekárně
+- U každého hráče v čekárně je puntík: 🟢 poloha povolená a funkční, 🔴 poloha chybí.
+- Hráč bez polohy vidí panel s tlačítkem **Povolit polohu** a při zakázané poloze návod pro iPhone a Android.
+- Hru nejde spustit, dokud nemají polohu všichni.
+- Kdykoli jde polohu zkusit povolit znovu ťuknutím na stav polohy v horní liště.
+
 ## Konec hry
 - **Detektivové vyhrají**, když se některý z nich Fantoma **fyzicky dotkne**. Fantom pak ve hře zmáčkne „Byl jsem dopaden“.
 - **Fantom vyhraje**, když ho do konce 45 minut honičky nikdo nedopadne.
