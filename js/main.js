@@ -110,39 +110,17 @@ const GPS_STEPS = {
   ],
 };
 
-// Zkrácený návod, když poloha funguje, ale není přesná
-const PRECISE_STEPS = {
-  ios: [
-    '<b>Nastavení</b> → <b>Soukromí a zabezpečení</b> → <b>Polohové služby</b> → sjeď dolů na <b>prohlížeč, který používáš</b> (Safari, Google, …) → zapni <b>Přesná poloha</b>.',
-    RELOAD,
-  ],
-  android: [
-    '<b>Nastavení</b> → <b>Aplikace</b> → <b>prohlížeč</b> (Google, Samsung Internet, …) → <b>Oprávnění</b> → <b>Poloha</b> → zapni <b>Použít přesnou polohu</b>.',
-    RELOAD,
-  ],
-};
-let gpsGuide = GPS_STEPS;
-
 function openGpsModal() {
   $('gps-pick').hidden = false;
   $('gps-guide').hidden = true;
   $('gps-modal').hidden = false;
 }
 document.querySelectorAll('[data-phone]').forEach((b) => b.addEventListener('click', () => {
-  $('gps-steps').innerHTML = gpsGuide[b.dataset.phone].map((t) => `<li>${t}</li>`).join('');
+  $('gps-steps').innerHTML = GPS_STEPS[b.dataset.phone].map((t) => `<li>${t}</li>`).join('');
   $('gps-pick').hidden = true;
   $('gps-guide').hidden = false;
 }));
-$('gps-howto').addEventListener('click', () => {
-  gpsGuide = GPS_STEPS;
-  $('gps-modal-title').textContent = 'Jak povolit polohu';
-  openGpsModal();
-});
-$('gps-howto2').addEventListener('click', () => {
-  gpsGuide = PRECISE_STEPS;
-  $('gps-modal-title').textContent = 'Jak zapnout přesnou polohu';
-  openGpsModal();
-});
+$('gps-howto').addEventListener('click', openGpsModal);
 $('gps-back').addEventListener('click', openGpsModal);
 $('gps-close').addEventListener('click', () => { $('gps-modal').hidden = true; });
 $('gps-reload').addEventListener('click', () => window.location.reload());
@@ -171,7 +149,7 @@ function renderGpsBox() {
   // Návod na přesnou polohu až po chvíli (první polohy bývají nepřesné, než se GPS chytí)
   const settling = state.firstFixAt && Date.now() - state.firstFixAt < 15000;
   $('gps-precise-box').hidden = !inLobby || !gpsOk() || gpsPrecise() || settling;
-  if (gpsReady()) $('gps-modal').hidden = true;
+  if (gpsOk()) $('gps-modal').hidden = true;
 }
 
 // Kontrola každých 5 s (poloha mohla přestat chodit). Když telefon stojí, nemusí
