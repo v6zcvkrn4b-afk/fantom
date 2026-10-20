@@ -53,7 +53,7 @@
     // Jen prohlížení herních území, bez hry a bez serveru.
     import { MAPS, getArea } from './js/maps.js';
     import { createMap } from './js/mapview.js';
-    import { watchPosition } from './js/gps.js';
+    import { watchPosition, permissionState } from './js/gps.js';
     import { isInside } from './js/geo.js';
 
     const params = new URLSearchParams(window.location.search);
@@ -87,8 +87,16 @@
       el.textContent = inside ? 'Jsi v herním území' : 'Jsi mimo herní území';
     }
 
-    watchPosition((f) => { fix = f; view.showMe(f, false); status(); }, () => {});
-    document.getElementById('locate').addEventListener('click', () => view.centerOnMe());
+    // Bez kliknutí se telefon na polohu nikdy nezeptá: sami ji sledujeme jen při trvalém povolení,
+    // jinak až po kliknutí na ◎
+    const onFix = (f) => { fix = f; view.showMe(f, false); status(); };
+    let watching = false;
+    const startWatch = () => { if (!watching) { watching = true; watchPosition(onFix, () => { watching = false; }); } };
+    permissionState().then((s) => { if (s === 'granted') startWatch(); });
+    document.getElementById('locate').addEventListener('click', () => {
+      if (fix) view.centerOnMe();
+      startWatch();
+    });
     select(area);
   </script>
 </body>
