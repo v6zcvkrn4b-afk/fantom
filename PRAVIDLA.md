@@ -6,6 +6,8 @@ Městská hra v reálných ulicích pro libovolný počet hráčů (doporučeno 
 - **Šumperk:** centrum a sever města, asi 2,6 km².
 - **Brno:** Královo Pole a kampusy VUT (Pod Palackého vrchem včetně Fakulty chemické, FIT na Božetěchově), asi 2,5 km². Hranice vede po cestě podél vozovny z Purkyňovy na Hudcovu, Palackého třídě, Dalimilově, Božetěchově, Mojmírově nám., Košinově, Dobrovského, Hradecké, Královopolské, Technické, U vodárny, pěšinách západně od hřiště a po Kolejní.
 
+- **Štramberk:** celé město včetně Trúby, náměstí, jeskyně Šipka, Bílé hory a Kamenárky, asi 2,2 km². Aktivní vápencový lom Kotouč je mimo území.
+
 Mapa se vybere automaticky podle polohy toho, kdo hru zakládá (mapa, ve které je, jinak nejbližší). Připojení hráči hrají na mapě dané hry. V nastavení hry je mapa uvedená jen pro informaci. Mapu jde vynutit v adrese, např. `…/fantom/?mapa=brno` nebo `?mapa=sumperk`.
 
 ## Role
