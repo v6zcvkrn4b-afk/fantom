@@ -31,6 +31,20 @@ const store = {
 const startArea = getArea(new URLSearchParams(window.location.search).get('mapa') || store.get('map'));
 const view = createMap('map', startArea);
 
+// Co je právě otevřené (krok úvodu, návod…), aby se po obnovení stránky ukázalo totéž.
+// sessionStorage platí jen pro tuto záložku. Může být nedostupné, proto try/catch.
+const ui = {
+  get(key) {
+    try { return sessionStorage.getItem(`fantom.${key}`); } catch { return null; }
+  },
+  set(key, value) {
+    try {
+      if (value == null) sessionStorage.removeItem(`fantom.${key}`);
+      else sessionStorage.setItem(`fantom.${key}`, value);
+    } catch { /* bez uložení se po obnovení ukáže výchozí obrazovka */ }
+  },
+};
+
 const state = {
   area: startArea,
   api: null,            // modul game.js (načte se po připojení k serveru)
@@ -154,17 +168,36 @@ function openGpsModal() {
   $('gps-pick').hidden = false;
   $('gps-guide').hidden = true;
   $('gps-modal').hidden = false;
+  ui.set('modal', 'pick');
 }
-document.querySelectorAll('[data-phone]').forEach((b) => b.addEventListener('click', () => {
-  $('gps-steps').innerHTML = GPS_STEPS[b.dataset.phone].map((t) => `<li>${t}</li>`).join('');
+function showGpsGuide(phone) {
+  $('gps-steps').innerHTML = GPS_STEPS[phone].map((t) => `<li>${t}</li>`).join('');
   $('gps-pick').hidden = true;
   $('gps-guide').hidden = false;
-}));
+  $('gps-modal').hidden = false;
+  ui.set('modal', phone);
+}
+function closeGpsModal() {
+  $('gps-modal').hidden = true;
+  ui.set('modal', null);
+}
+document.querySelectorAll('[data-phone]').forEach((b) => b.addEventListener('click', () => showGpsGuide(b.dataset.phone)));
 $('gps-howto').addEventListener('click', openGpsModal);
 $('gps-back').addEventListener('click', openGpsModal);
-$('gps-close').addEventListener('click', () => { $('gps-modal').hidden = true; });
+$('gps-close').addEventListener('click', closeGpsModal);
 $('gps-reload').addEventListener('click', () => window.location.reload());
-$('gps-reload2').addEventListener('click', () => window.location.reload());
+// „Hotovo – obnovit stránku“ v návodu: po obnovení rovnou do čekárny (bez návodu)
+$('gps-reload2').addEventListener('click', () => {
+  ui.set('modal', null);
+  window.location.reload();
+});
+
+// Po obnovení stránky znovu otevřít návod, pokud byl otevřený
+function restoreModal() {
+  const m = ui.get('modal');
+  if (m === 'pick') openGpsModal();
+  else if (m === 'ios' || m === 'android') showGpsGuide(m);
+}
 
 // Ťuknutí na stav polohy nahoře zkusí polohu získat znovu (prohlížeč případně ukáže dotaz)
 $('status').addEventListener('click', () => {
@@ -188,7 +221,7 @@ function renderGpsBox() {
   const failed = !gpsOk() && (state.gpsError !== null || state.gpsAsked);
   const imprecise = gpsOk() && !gpsPrecise();
   $('gps-box').hidden = !inLobby || gpsReady() || !(failed || imprecise);
-  if (gpsReady()) $('gps-modal').hidden = true;
+  if (gpsReady() && !$('gps-modal').hidden) closeGpsModal();
 }
 
 // Kontrola každých 5 s (poloha mohla přestat chodit). Když telefon stojí, nemusí
@@ -291,6 +324,9 @@ const home = { mode: 'create', code: null };
 
 function showStep(step, error) {
   for (const s of ['start', 'code', 'name']) $(`step-${s}`).hidden = s !== step;
+  ui.set('step', step);
+  ui.set('mode', home.mode);
+  ui.set('homeCode', home.code);
   $('home-error').hidden = !error;
   $('home-error').textContent = error || '';
   if (step === 'name') {
@@ -377,6 +413,20 @@ $('name-next').addEventListener('click', () => busy($('name-next'), async () => 
 $('name-back').addEventListener('click', () => showStep(home.mode === 'join' ? 'code' : 'start'));
 document.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => showStep(b.dataset.back)));
 
+// Rozepsaný kód a přezdívka přežijí obnovení stránky
+$('code').addEventListener('input', () => ui.set('codeDraft', $('code').value));
+$('name').addEventListener('input', () => ui.set('nameDraft', $('name').value));
+
+// Po obnovení stránky vrátit úvod na krok, kde hráč byl
+function restoreHome(saved) {
+  home.mode = saved.mode || 'create';
+  home.code = saved.code;
+  if (ui.get('codeDraft')) $('code').value = ui.get('codeDraft');
+  if (ui.get('nameDraft')) $('name').value = ui.get('nameDraft');
+  const { step } = saved;
+  if (step === 'code' || (step === 'name' && (home.mode === 'create' || home.code))) showStep(step);
+}
+
 // Enter na klávesnici = pokračovat
 $('code').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('code-next').click(); });
 $('name').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('name-next').click(); });
@@ -384,22 +434,29 @@ $('name').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('name-ne
 function openGame(code) {
   if (state.unwatch) state.unwatch();
   Object.assign(state, {
-    code, game: null, gpsSent: null, lastRevealSeen: null, markersKey: '', writing: new Set(), escapeSent: false, reviewing: false,
+    code, game: null, gpsSent: null, lastRevealSeen: null, markersKey: '', writing: new Set(), escapeSent: false,
+    reviewing: ui.get('reviewing') === code,
   });
   store.set('code', code);
+  ui.set('step', null);
+  ui.set('codeDraft', null);
   state.unwatch = state.api.watchGame(code, (game) => {
     if (!game || !game.meta || !game.players?.[state.uid]) {
       closeGame();
       showHome(game ? 'Už nejsi v této hře.' : 'Tahle hra už neexistuje.');
       return;
     }
+    const first = !state.game;
     state.game = game;
     setArea(getArea(game.meta.mapId));
     render();
+    if (first && game.meta.status === 'lobby') restoreModal();
   });
 }
 
 function closeGame() {
+  ui.set('reviewing', null);
+  ui.set('modal', null);
   if (state.unwatch) state.unwatch();
   state.unwatch = null;
   state.code = null;
@@ -899,12 +956,14 @@ $('caught').addEventListener('click', async () => {
 
 $('show-map').addEventListener('click', () => {
   state.reviewing = true;
+  ui.set('reviewing', state.code);
   render();
   view.fitArea();
 });
 
 $('back-result').addEventListener('click', () => {
   state.reviewing = false;
+  ui.set('reviewing', null);
   render();
 });
 
@@ -924,7 +983,14 @@ function setOnline(online) {
   serverEl.title = online ? 'Připojeno k serveru' : 'Bez spojení se serverem';
 }
 
-showHome();
+// Po obnovení stránky rozehrané hry se úvod vůbec neukáže – počká se na data hry
+if (store.get('code')) showScreen(null);
+else {
+  const saved = { step: ui.get('step'), mode: ui.get('mode'), code: ui.get('homeCode') };
+  showHome();
+  restoreHome(saved);
+  restoreModal();
+}
 (async () => {
   try {
     // Firebase se načítá zvlášť, aby mapa fungovala, i kdyby se server nepodařilo načíst
