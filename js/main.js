@@ -562,7 +562,7 @@ function renderLobby() {
   // Co ještě chybí ke startu – vždy jen jedna věc: nejdřív poloha, pak výběr Fantoma
   let note = '';
   if (noGps.length) note = `Čeká se na polohu: ${noGps.join(', ')}.`;
-  else if (!phantomChosen) note = isHost ? 'Fantom zatím nebyl vybrán – klikni na hráče, který jím bude.' : 'Fantom zatím nebyl vybrán.';
+  else if (!phantomChosen) note = 'Fantom zatím nebyl vybrán.';
   else if (detectives < 1) note = 'Ve hře zatím není žádný detektiv.';
   else if (detectives < PLAYERS.minDetectives) note = `Doporučeno je aspoň ${PLAYERS.minDetectives} detektivů (teď ${detectives}).`;
   $('lobby-times').textContent = note;
