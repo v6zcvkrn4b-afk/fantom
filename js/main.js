@@ -43,6 +43,7 @@ const state = {
   gpsError: null,       // kód poslední chyby GPS (1 = zakázáno)
   gpsSent: null,        // stav polohy naposledy zapsaný do čekárny
   gpsAsked: false,      // hráč už klikl na „Povolit polohu“
+  perm: null,           // oprávnění k poloze: null (zjišťuje se) | granted | prompt | denied | unknown
   firstFixAt: null,     // kdy přišla první poloha
   lastPreciseAt: null,  // kdy naposledy přišla přesná poloha (do 500 m)
   lastRevealSeen: null, // { phantom, detective } – pro upozornění na nové odhalení
@@ -58,6 +59,8 @@ const isRunning = () => state.game?.meta?.status === 'running';
 // ---------- GPS ----------
 function onFix(fix) {
   state.fix = { ...fix, receivedAt: Date.now() };
+  state.perm = 'granted';
+  store.set('gpsGranted', '1');
   if (!state.firstFixAt) state.firstFixAt = Date.now();
   if (fix.accuracy <= PRECISE_M) state.lastPreciseAt = Date.now();
   state.gpsError = null;
@@ -95,9 +98,16 @@ function startGps() {
 }
 // Polohu sledujeme sami jen tehdy, když ji už hráč dřív povolil (pak se telefon nic neptá).
 // Jinak čekáme, až v čekárně klikne na „Povolit polohu“ – teprve pak se ukáže dotaz telefonu.
+// Když prohlížeč stav oprávnění neprozradí, pomůže, že poloha v tomto telefonu už dřív fungovala.
 permissionState().then((s) => {
-  if (s === 'granted') startGps();
-  else $('status').textContent = 'Poloha zatím není povolená';
+  state.perm = s;
+  if (s === 'granted' || (s === 'unknown' && store.get('gpsGranted'))) {
+    state.perm = 'granted';
+    startGps();
+  } else {
+    $('status').textContent = 'Poloha zatím není povolená';
+  }
+  if (state.game) render();
 });
 
 // Kliknutí na „Povolit polohu“ u vlastního jména v čekárně
@@ -453,7 +463,7 @@ function renderLobby() {
     name.prepend(dot);
     li.append(name);
     // U sebe: tlačítko, které teprve vyvolá dotaz telefonu na polohu
-    if (uid === state.uid && !gpsOk() && !state.gpsAsked) {   // jen do prvního kliknutí; pak už pomůže jen návod
+    if (uid === state.uid && !gpsOk() && !state.gpsAsked && state.perm !== 'granted' && state.perm !== null) {   // jen do prvního kliknutí; pak už pomůže jen návod
       const allow = document.createElement('button');
       allow.type = 'button';
       allow.className = 'gps-allow';
