@@ -15,7 +15,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+const auth = getAuth(app);
 export const db = getDatabase(app);
 
 // Rozdíl mezi hodinami telefonu a serveru, aby všichni počítali stejný čas

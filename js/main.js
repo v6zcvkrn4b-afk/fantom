@@ -63,6 +63,7 @@ const state = {
   lastPreciseAt: null,  // kdy naposledy přišla přesná poloha (do 500 m)
   lastRevealSeen: null, // { phantom, detective } – pro upozornění na nové odhalení
   markersKey: '',
+  rev: 0,               // zvýší se s každou novou verzí dat hry (pro překreslení značek)
   writing: new Set(),   // odhalení, která právě zapisujeme
   escapeSent: false,
   reviewing: false,     // po konci hry prohlížení trasy na mapě
@@ -89,10 +90,8 @@ function onFix(fix) {
 
 function onGpsError(code) {
   state.gpsError = code;
-  if (code === 1) {
-    // Poloha je teď zakázaná – příště zase nabídnout tlačítko
-    if (state.perm === 'granted') state.perm = 'denied';
-  }
+  // Poloha je teď zakázaná – příště zase nabídnout tlačítko
+  if (code === 1 && state.perm === 'granted') state.perm = 'denied';
   if (!gpsOk()) {
     $('status').classList.add('error');
     $('status').textContent = `${GPS_MESSAGES[code] || 'Chyba GPS'} – klikni sem`;
@@ -116,15 +115,12 @@ const gpsReady = () => gpsOk() && gpsPrecise();
 function startGps() {
   watchPosition(onFix, onGpsError);
 }
-// Polohu sledujeme sami jen tehdy, když ji už hráč dřív povolil (pak se telefon nic neptá).
-// Jinak čekáme, až v čekárně klikne na „Povolit polohu“ – teprve pak se ukáže dotaz telefonu.
 // Polohu sledujeme sami jen při trvale povoleném oprávnění („granted“) – pak se telefon nikdy
 // nezeptá. V každém jiném případě by se mohl objevit systémový dotaz, a ten smí vyvolat
 // jedině kliknutí na „Povolit polohu“.
 permissionState().then((s) => {
   state.perm = s;
   if (s === 'granted') {
-    state.perm = 'granted';
     startGps();
   } else {
     $('status').textContent = 'Poloha zatím není povolená';
@@ -224,7 +220,6 @@ function reportGps() {
   state.api.setGpsReady(state.code, state.uid, ok).catch(() => { state.gpsSent = null; });
 }
 
-// Panel v čekárně pro hráče bez polohy
 // Panel s návodem se zobrazuje přímo pod vlastním jménem v seznamu hráčů (viz renderLobby),
 // proto si držíme odkaz – při překreslení seznamu se do řádku jen znovu přesune.
 const gpsBox = $('gps-box');
@@ -469,6 +464,7 @@ function openGame(code) {
     }
     const first = !state.game;
     state.game = game;
+    state.rev++;
     ui.set('gameCache', JSON.stringify({ code, uid: state.uid, game }));
     setArea(getArea(game.meta.mapId));
     render();
@@ -490,6 +486,8 @@ function closeGame() {
 // ---------- Vykreslení podle stavu hry ----------
 function render() {
   const { meta } = state.game;
+  // Návod k poloze patří jen do čekárny (hra mohla mezitím začít)
+  if (meta.status !== 'lobby' && !$('gps-modal').hidden) closeGpsModal();
   if (state.fix) view.showMe(state.fix, isPhantom());
   updateGpsStatus();
 
@@ -508,7 +506,7 @@ function render() {
     $('hud').hidden = true;
     $('caught').hidden = true;
     $('outside').hidden = true;
-  $('warn').hidden = true;
+    $('warn').hidden = true;
     showScreen(state.reviewing ? null : 'result');
     $('back-result').hidden = !state.reviewing;
     renderResult();
@@ -717,7 +715,6 @@ function buildSettings(readOnly) {
   namesItem.append(namesLabel, namesSeg);
   box.append(namesItem);
 
-
   const setWheel = (w, v) => { if (w.value !== v) w.set(v); };
 
   return {
@@ -744,7 +741,7 @@ function buildSettings(readOnly) {
 }
 
 $('start').addEventListener('click', async () => {
-  if (!window.confirm('Spustit hru? Fantom začne utíkat a běží čas.')) return;
+  if (!state.api || !window.confirm('Spustit hru? Fantom začne utíkat a běží čas.')) return;
   $('start').disabled = true;
   try {
     await state.api.startGame(state.code);
@@ -758,7 +755,7 @@ $('leave').addEventListener('click', async () => {
   const code = state.code;
   closeGame();
   showHome();
-  try { await state.api.leaveGame(code, state.uid); } catch { /* hra už mohla začít */ }
+  try { await state.api?.leaveGame(code, state.uid); } catch { /* hra už mohla začít */ }
 });
 
 // ---------- Průběh hry (každou sekundu) ----------
@@ -803,18 +800,13 @@ function tick() {
   $('det-reveal').textContent = until(tl.detective);
   $('hud-note').textContent = hudNote(tl, now, phantom);
 
-  // Nová odhalení: upozornit a zapsat vlastní polohu
+  // Nové odhalení: pípnout (Fantom jen u odhalení detektivů, která smí vidět) a zapsat vlastní polohu
   const seen = state.lastRevealSeen;
-  const messages = [];
-  if (seen && tl.phantom.index > seen.phantom) {
-    messages.push(phantom ? '🔍 Detektivové teď vidí, kde jsi.' : '🔍 Fantom odhalen! Podívej se na mapu.');
+  if (seen) {
+    const phantomRevealed = tl.phantom.index > seen.phantom;
+    const detectivesRevealed = Boolean(tl.detective) && tl.detective.index > seen.detective;
+    if (phantomRevealed || (detectivesRevealed && (!phantom || canSeeDetectives()))) notify();
   }
-  if (seen && tl.detective && tl.detective.index > seen.detective) {
-    if (phantom && canSeeDetectives()) messages.push('🕵️ Vidíš, kde jsou detektivové.');
-    else if (!phantom && vis === 'phantom') messages.push('👁️ Fantom teď vidí, kde jsi.');
-    else if (!phantom && !messages.length) messages.push('🕵️ Polohy detektivů aktualizovány.');
-  }
-  if (messages.length) notify();
   state.lastRevealSeen = { phantom: tl.phantom.index, detective: tl.detective ? tl.detective.index : -1 };
   writeMyReveal(tl, now);
   renderMarkers();
@@ -884,7 +876,7 @@ function renderMarkers() {
   const dLimit = ended ? maxKey(reveals.detectives) : (tl && tl.detective ? tl.detective.index : -1);
   const seeDetectives = canSeeDetectives();
   const showNames = ended || normalizeTimes(game.meta.times).showDetectiveNames;
-  const key = JSON.stringify([game.meta.status, pLimit, dLimit, seeDetectives, showNames, reveals]);
+  const key = [state.rev, game.meta.status, pLimit, dLimit, seeDetectives, showNames].join('|');
   if (key === state.markersKey) return;
   state.markersKey = key;
 
@@ -969,7 +961,7 @@ function renderResult() {
 }
 
 $('caught').addEventListener('click', async () => {
-  if (!window.confirm('Opravdu tě detektiv chytil? Hra tím pro všechny skončí.')) return;
+  if (!state.api || !window.confirm('Opravdu tě detektiv chytil? Hra tím pro všechny skončí.')) return;
   try {
     await state.api.reportCaught(state.code);
   } catch (err) {
@@ -1006,7 +998,6 @@ function setOnline(online) {
   serverEl.title = online ? 'Připojeno k serveru' : 'Bez spojení se serverem';
 }
 
-// Po obnovení stránky rozehrané hry se úvod vůbec neukáže – počká se na data hry
 // Po obnovení stránky se rovnou vykreslí poslední známý stav hry (z této záložky),
 // živá data ze serveru ho za chvíli nahradí – žádné probliknutí úvodu ani prázdné mapy.
 let cached = null;
@@ -1022,7 +1013,6 @@ if (store.get('code') && cached?.code === store.get('code') && cached.game?.play
   const saved = { step: ui.get('step'), mode: ui.get('mode'), code: ui.get('homeCode') };
   showHome();
   restoreHome(saved);
-  restoreModal();
 }
 (async () => {
   try {
