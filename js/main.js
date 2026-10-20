@@ -567,7 +567,7 @@ function renderLobby() {
   const noGps = players.filter(([uid, p]) => (uid === state.uid ? !gpsReady() : p.gps !== true)).map(([, p]) => p.name);
   // Co ještě chybí ke startu – vždy jen jedna věc: nejdřív poloha, pak výběr Fantoma
   let note = '';
-  if (noGps.length) note = `Čeká se na polohu: ${noGps.join(', ')}.`;
+  if (noGps.length) note = `Čeká se na polohu: ${noGps.join(', ')}`;
   else if (!phantomChosen) note = 'Fantom zatím nebyl vybrán.';
   else if (detectives < 1) note = 'Ve hře zatím není žádný detektiv.';
   else if (detectives < PLAYERS.minDetectives) note = `Doporučeno je aspoň ${PLAYERS.minDetectives} detektivů (teď ${detectives}).`;
