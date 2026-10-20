@@ -94,9 +94,12 @@
       <ul id="lobby-players"></ul>
       <div id="gps-box" class="gps-panel" hidden>
         <p class="gps-title">🔴 Poloha NENÍ povolena – bez ní nejde hrát.</p>
-        <p>Zkus obnovit stránku a povolit polohu.</p>
-        <button id="gps-reload" type="button" class="primary">Obnovit stránku</button>
-        <p class="gps-more">Pokud to stále nejde:</p>
+        <div id="gps-retry">
+          <p>Zkus obnovit stránku a povolit polohu.</p>
+          <button id="gps-reload" type="button" class="primary">Obnovit stránku</button>
+          <p class="gps-more">Pokud to stále nejde:</p>
+        </div>
+        <p id="gps-blocked" hidden>Telefon se na polohu už neptá (po opakovaném zamítnutí ji prohlížeč blokuje). Povol ji v nastavení:</p>
         <button id="gps-howto" type="button" class="primary">Jak povolit polohu</button>
       </div>
       <div id="settings" hidden></div>
