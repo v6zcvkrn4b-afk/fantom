@@ -125,7 +125,6 @@ $('gps-back').addEventListener('click', openGpsModal);
 $('gps-close').addEventListener('click', () => { $('gps-modal').hidden = true; });
 $('gps-reload').addEventListener('click', () => window.location.reload());
 $('gps-reload2').addEventListener('click', () => window.location.reload());
-$('gps-reload3').addEventListener('click', () => window.location.reload());
 
 // Ťuknutí na stav polohy nahoře zkusí polohu získat znovu (prohlížeč případně ukáže dotaz)
 $('status').addEventListener('click', () => {
@@ -145,11 +144,10 @@ function reportGps() {
 // Panel v čekárně pro hráče bez polohy
 function renderGpsBox() {
   const inLobby = state.game?.meta?.status === 'lobby';
-  $('gps-box').hidden = !inLobby || gpsOk();
-  // Návod na přesnou polohu až po chvíli (první polohy bývají nepřesné, než se GPS chytí)
-  const settling = state.firstFixAt && Date.now() - state.firstFixAt < 15000;
-  $('gps-precise-box').hidden = !inLobby || !gpsOk() || gpsPrecise() || settling;
-  if (gpsOk()) $('gps-modal').hidden = true;
+  // Stejný panel i pro nepřesnou polohu; první polohy bývají nepřesné, proto 15 s počkáme
+  const settling = gpsOk() && state.firstFixAt && Date.now() - state.firstFixAt < 15000;
+  $('gps-box').hidden = !inLobby || gpsReady() || settling;
+  if (gpsReady()) $('gps-modal').hidden = true;
 }
 
 // Kontrola každých 5 s (poloha mohla přestat chodit). Když telefon stojí, nemusí
