@@ -65,7 +65,7 @@ function onGpsError(code) {
   state.gpsError = code;
   if (!gpsOk()) {
     $('status').classList.add('error');
-    $('status').textContent = `${GPS_MESSAGES[code] || 'Chyba GPS'} – ťukni sem`;
+    $('status').textContent = `${GPS_MESSAGES[code] || 'Chyba GPS'} – klikni sem`;
   }
   reportGps();
 }
@@ -80,22 +80,22 @@ startGps();
 
 // Web polohu zapnout sám nesmí. Hráč bez polohy dostane radu obnovit stránku
 // a návod podle telefonu (okno „Jak povolit polohu“).
-const INAPP = 'Máš-li hru otevřenou přes odkaz v Messengeru, Instagramu, WhatsAppu nebo jiné aplikaci, otevři ji přímo v <b>prohlížeči</b> (Safari, Google, …).';
-const RELOAD = 'Vrať se sem a ťukni na <b>Hotovo – obnovit stránku</b>. Když se telefon zeptá na polohu, dej <b>Povolit</b>.';
+const INAPP = 'Pokud máš hru otevřenou přes odkaz v Messengeru, Instagramu, WhatsAppu nebo jiné aplikaci, otevři ji přímo v <b>prohlížeči</b> (Safari, Google, …).';
+const RELOAD = 'Vrať se sem a klikni na <b>Hotovo – obnovit stránku</b>. Když se telefon zeptá na polohu, dej <b>Povolit</b>.';
 const GPS_STEPS = {
   ios: [
     INAPP,
     '<b>Nastavení</b> → <b>Soukromí a zabezpečení</b> → <b>Polohové služby</b> → přepínač nahoře musí být <b>zapnutý</b>.',
-    'Ve stejném seznamu sjeď dolů na svůj <b>prohlížeč</b> (Safari, Google, …) → zaklikni <b>Při používání aplikace</b> → zapni <b>Přesná poloha</b>.',
-    '<b>Nastavení</b> → <b>Aplikace</b> → svůj <b>prohlížeč</b> (Safari, Google, …) → <b>Poloha</b> → zaklikni <b>Zeptat se</b> nebo <b>Povolit</b>.',
-    'V <b>prohlížeči</b> (Safari, Google, …) na stránce hry ťukni na ikonu v adresním řádku (<b>aA</b> nebo ikonu vlevo) → <b>Nastavení webu</b> / <b>Oprávnění</b> → <b>Poloha</b> → <b>Povolit</b>.',
+    'Ve stejném seznamu sjeď dolů na <b>prohlížeč, který používáš</b> (Safari, Google, …) → zaklikni <b>Při používání aplikace</b> → zapni <b>Přesná poloha</b>.',
+    '<b>Nastavení</b> → <b>Aplikace</b> → <b>prohlížeč</b> (Safari, Google, …) → <b>Poloha</b> → zaklikni <b>Zeptat se</b> nebo <b>Povolit</b>.',
+    'V <b>prohlížeči</b> (Safari, Google, …) na stránce hry klikni na ikonu v adresním řádku (<b>aA</b> nebo ikona vlevo) → <b>Nastavení webu</b> / <b>Oprávnění</b> → <b>Poloha</b> → <b>Povolit</b>.',
     RELOAD,
   ],
   android: [
     INAPP,
     'Stáhni lištu shora a zkontroluj, že je zapnutá <b>Poloha</b>.',
-    'V <b>prohlížeči</b> (Google, Samsung Internet, …) na stránce hry ťukni na ikonu <b>vlevo od adresy</b> → <b>Oprávnění</b> (nebo <b>Nastavení webu</b>) → <b>Poloha</b> → <b>Povolit</b>.',
-    '<b>Nastavení</b> telefonu → <b>Aplikace</b> → svůj <b>prohlížeč</b> (Google, Samsung Internet, …) → <b>Oprávnění</b> → <b>Poloha</b> → zaklikni <b>Povolit jen při používání aplikace</b> → zapni <b>Použít přesnou polohu</b>.',
+    'V <b>prohlížeči</b> (Google, Samsung Internet, …) na stránce hry klikni na ikonu <b>vlevo od adresy</b> → <b>Oprávnění</b> (nebo <b>Nastavení webu</b>) → <b>Poloha</b> → <b>Povolit</b>.',
+    '<b>Nastavení</b> telefonu → <b>Aplikace</b> → <b>prohlížeč</b> (Google, Samsung Internet, …) → <b>Oprávnění</b> → <b>Poloha</b> → zaklikni <b>Povolit jen při používání aplikace</b> → zapni <b>Použít přesnou polohu</b>.',
     RELOAD,
   ],
 };
@@ -148,7 +148,7 @@ setInterval(() => {
   }
   if (state.fix && !gpsOk()) {
     $('status').classList.add('error');
-    $('status').textContent = 'Poloha se neaktualizuje – ťukni sem';
+    $('status').textContent = 'Poloha se neaktualizuje – klikni sem';
   }
   reportGps();
   if (state.game?.meta?.status === 'lobby') renderGpsBox();
@@ -403,7 +403,7 @@ function renderLobby() {
 
   $('lobby-code').textContent = state.code;
   $('lobby-hint').textContent = isHost
-    ? 'Ťukni na hráče, který bude Fantom. Ostatní budou detektivové.'
+    ? 'Klikni na hráče, který bude Fantom. Ostatní budou detektivové.'
     : 'Fantoma vybírá zakladatel hry (★).';
 
   const list = $('lobby-players');

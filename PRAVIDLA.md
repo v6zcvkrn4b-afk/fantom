@@ -15,7 +15,7 @@ Mapa se vybere automaticky podle polohy toho, kdo hru zakládá (mapa, ve které
 - **Detektivové** (kolik hráčů se připojí) ho hledají a snaží se ho dopadnout. Připojit se dá jen v čekárně; po spuštění hry už ne.
 
 ## Průběh
-1. Jeden hráč dá **Založit novou hru**, napíše přezdívku a dostane 4místný kód. Ostatní dají **Připojit se ke hře**, zadají kód a pak přezdívku. Bez registrace. V čekárně všichni vidí hráče i nastavení hry; zakladatel nastavení upraví, ťuknutím vybere Fantoma a hru spustí.
+1. Jeden hráč dá **Založit novou hru**, napíše přezdívku a dostane 4místný kód. Ostatní dají **Připojit se ke hře**, zadají kód a pak přezdívku. Bez registrace. V čekárně všichni vidí hráče i nastavení hry; zakladatel nastavení upraví, kliknutím vybere Fantoma a hru spustí.
 2. **Náskok 5 minut:** Fantom utíká a detektivové čekají. Ničí poloha se zatím nezobrazuje.
 3. **Honička 45 minut** (podle nastavení): Fantom i detektivové se pravidelně **odhalují**, každá skupina podle svého intervalu (výchozí každých 5 minut, poprvé hned po skončení náskoku):
    - detektivové uvidí přesný bod, kde byl Fantom v okamžiku odhalení,
@@ -31,7 +31,7 @@ Mapa se vybere automaticky podle polohy toho, kdo hru zakládá (mapa, ve které
 
 ## Poloha v čekárně
 - U každého hráče v čekárně je puntík: 🟢 poloha povolená a funkční, 🔴 poloha chybí.
-- Hráč bez polohy vidí panel „Poloha je zakázaná – bez ní nejde hrát“ s tlačítkem **Obnovit stránku** a tlačítkem **Jak povolit polohu**, které otevře návod podle telefonu (iPhone / Android).
+- Hráč bez polohy vidí panel „Poloha NENÍ povolena – bez ní nejde hrát“ s tlačítkem **Obnovit stránku** a tlačítkem **Jak povolit polohu**, které otevře návod podle telefonu (iPhone / Android).
 - Hru nejde spustit, dokud nemají polohu všichni.
 - Kdykoli jde polohu zkusit povolit znovu ťuknutím na stav polohy v horní liště.
 

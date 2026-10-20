@@ -673,3 +673,10 @@ html, body {
 #gps-steps li {
   margin-bottom: 10px;
 }
+
+/* Výrazné druhé tlačítko (plné, ale odlišné od hlavního žlutého) */
+.card button.secondary {
+  border: none;
+  background: #e5e7eb;
+  color: #111;
+}
