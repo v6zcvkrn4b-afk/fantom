@@ -316,7 +316,7 @@ function notify() {
 
 // ---------- Obrazovky ----------
 function showScreen(name) {
-  for (const id of ['home', 'lobby', 'result']) $(id).hidden = id !== name;
+  for (const id of ['home', 'lobby', 'result', 'loading']) $(id).hidden = id !== name;
 }
 
 // Úvod má kroky: 'start' (výběr) → 'code' (jen při připojení) → 'name'
@@ -433,8 +433,10 @@ $('name').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('name-ne
 
 function openGame(code) {
   if (state.unwatch) state.unwatch();
+  // Stejná hra jako ta vykreslená z uloženého stavu: nechat ji na obrazovce, dokud nepřijdou živá data
+  const keep = state.code === code ? state.game : null;
   Object.assign(state, {
-    code, game: null, gpsSent: null, lastRevealSeen: null, markersKey: '', writing: new Set(), escapeSent: false,
+    code, game: keep, gpsSent: null, lastRevealSeen: null, markersKey: '', writing: new Set(), escapeSent: false,
     reviewing: ui.get('reviewing') === code,
   });
   store.set('code', code);
@@ -448,6 +450,7 @@ function openGame(code) {
     }
     const first = !state.game;
     state.game = game;
+    ui.set('gameCache', JSON.stringify({ code, uid: state.uid, game }));
     setArea(getArea(game.meta.mapId));
     render();
     if (first && game.meta.status === 'lobby') restoreModal();
@@ -455,6 +458,7 @@ function openGame(code) {
 }
 
 function closeGame() {
+  ui.set('gameCache', null);
   ui.set('reviewing', null);
   ui.set('modal', null);
   if (state.unwatch) state.unwatch();
@@ -541,7 +545,7 @@ function renderLobby() {
     li.classList.toggle('is-phantom', phantom);
     if (isHost) {
       li.classList.add('pickable');
-      li.addEventListener('click', () => state.api.setPhantom(state.code, uid));
+      li.addEventListener('click', () => state.api?.setPhantom(state.code, uid));
     }
     list.append(li);
   }
@@ -592,7 +596,7 @@ function buildSettings(readOnly) {
   const t0 = normalizeTimes(state.game.meta.times);
 
   // Ukládá se vždy celé nastavení, aby prošla kontrola v pravidlech databáze
-  const save = (changes) => state.api.updateTimes(state.code, { ...normalizeTimes(state.game.meta.times), ...changes })
+  const save = (changes) => (state.api ? state.api.updateTimes : () => Promise.resolve())(state.code, { ...normalizeTimes(state.game.meta.times), ...changes })
     .catch((err) => window.alert(`Nastavení se nepodařilo uložit (${err.code || err.message}).`));
 
   function addPicker(key, label, wheelDefs) {
@@ -798,13 +802,14 @@ function tick() {
   renderMarkers();
 
   // Vypršel čas → Fantom unikl
-  if (tl.phase === 'over' && !state.escapeSent) {
+  if (tl.phase === 'over' && !state.escapeSent && state.api) {
     state.escapeSent = true;
     state.api.reportEscaped(state.code).catch(() => { state.escapeSent = false; });
   }
 }
 
 function writeMyReveal(tl, now) {
+  if (!state.api) return;   // po obnovení stránky se ještě připojuje k serveru
   const reveals = state.game.reveals || {};
   const phantom = isPhantom();
   const track = phantom ? tl.phantom : tl.detective;
@@ -984,8 +989,18 @@ function setOnline(online) {
 }
 
 // Po obnovení stránky rozehrané hry se úvod vůbec neukáže – počká se na data hry
-if (store.get('code')) showScreen(null);
-else {
+// Po obnovení stránky se rovnou vykreslí poslední známý stav hry (z této záložky),
+// živá data ze serveru ho za chvíli nahradí – žádné probliknutí úvodu ani prázdné mapy.
+let cached = null;
+try { cached = JSON.parse(ui.get('gameCache') || 'null'); } catch { cached = null; }
+if (store.get('code') && cached?.code === store.get('code') && cached.game?.players?.[cached.uid]) {
+  Object.assign(state, { code: cached.code, uid: cached.uid, game: cached.game, reviewing: ui.get('reviewing') === cached.code });
+  setArea(getArea(cached.game.meta.mapId));
+  render();
+  if (cached.game.meta.status === 'lobby') restoreModal();
+} else if (store.get('code')) {
+  showScreen('loading');
+} else {
   const saved = { step: ui.get('step'), mode: ui.get('mode'), code: ui.get('homeCode') };
   showHome();
   restoreHome(saved);
