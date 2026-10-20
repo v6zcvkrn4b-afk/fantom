@@ -56,7 +56,7 @@ Zakladatel v čekárně nastaví (časy se vybírají otočnými válečky jako 
 - **jak často se ukazují detektivové** (výchozí každých 5 min),
 - **jména detektivů na mapě**: zobrazit, nebo anonymně (výchozí zobrazit; po konci hry se jména ukážou vždy).
 
-Na mapě jsou detektivové červeně a Fantom černě. Tlačítkem „Obnovit výchozí nastavení“ se vše vrátí na výchozí hodnoty.
+Na mapě jsou detektivové červeně a Fantom černě.
 
 Na rychlé vyzkoušení stačí nastavit krátké časy, např. 1 min náskok, 5 min hra a odhalení každou minutu.
 

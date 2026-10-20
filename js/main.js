@@ -1,4 +1,4 @@
-import { PLAYERS, LIMITS, TIMES } from './config.js';
+import { PLAYERS, LIMITS } from './config.js';
 import { pickArea, getArea } from './maps.js';
 import {
   watchPosition, requestPosition, permissionState, GPS_MESSAGES,
@@ -559,10 +559,13 @@ function renderLobby() {
   $('settings').hidden = false;
   // Hru nejde spustit, dokud všichni nemají polohu
   const noGps = players.filter(([uid, p]) => (uid === state.uid ? !gpsReady() : p.gps !== true)).map(([, p]) => p.name);
-  const notes = [];
-  if (noGps.length) notes.push(`Čeká se na polohu: ${noGps.join(', ')}.`);
-  if (phantomChosen && detectives < PLAYERS.minDetectives) notes.push(`Doporučeno je aspoň ${PLAYERS.minDetectives} detektivů (teď ${detectives}).`);
-  $('lobby-times').textContent = notes.join(' ');
+  // Co ještě chybí ke startu – vždy jen jedna věc: nejdřív poloha, pak výběr Fantoma
+  let note = '';
+  if (noGps.length) note = `Čeká se na polohu: ${noGps.join(', ')}.`;
+  else if (!phantomChosen) note = isHost ? 'Fantom zatím nebyl vybrán – klikni na hráče, který jím bude.' : 'Fantom zatím nebyl vybrán.';
+  else if (detectives < 1) note = 'Ve hře zatím není žádný detektiv.';
+  else if (detectives < PLAYERS.minDetectives) note = `Doporučeno je aspoň ${PLAYERS.minDetectives} detektivů (teď ${detectives}).`;
+  $('lobby-times').textContent = note;
 
   $('start').hidden = !isHost;
   $('start').disabled = !(phantomChosen && detectives >= 1 && noGps.length === 0);
@@ -692,13 +695,6 @@ function buildSettings(readOnly) {
   namesItem.append(namesLabel, namesSeg);
   box.append(namesItem);
 
-  const reset = document.createElement('button');
-  reset.type = 'button';
-  reset.className = 'link';
-  reset.textContent = 'Obnovit výchozí nastavení';
-  reset.addEventListener('click', () => save(TIMES));
-  reset.hidden = readOnly;
-  box.append(reset);
 
   const setWheel = (w, v) => { if (w.value !== v) w.set(v); };
 
