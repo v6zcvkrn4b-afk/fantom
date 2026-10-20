@@ -674,9 +674,9 @@ html, body {
   margin-bottom: 10px;
 }
 
-/* Výrazné druhé tlačítko (plné, ale odlišné od hlavního žlutého) */
+/* Druhé tlačítko: plné, ale tlumené (ladí s tmavým vzhledem) */
 .card button.secondary {
-  border: none;
-  background: #e5e7eb;
-  color: #111;
+  border: 1px solid #4b5563;
+  background: #374151;
+  color: var(--text);
 }
