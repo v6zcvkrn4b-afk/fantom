@@ -566,6 +566,8 @@ function renderLobby() {
   else if (detectives < 1) note = 'Ve hře zatím není žádný detektiv.';
   else if (detectives < PLAYERS.minDetectives) note = `Doporučeno je aspoň ${PLAYERS.minDetectives} detektivů (teď ${detectives}).`;
   $('lobby-times').textContent = note;
+  // Co brání spuštění je červeně; pouhé doporučení zůstává šedé
+  $('lobby-times').classList.toggle('blocking', Boolean(noGps.length || !phantomChosen || detectives < 1));
 
   $('start').hidden = !isHost;
   $('start').disabled = !(phantomChosen && detectives >= 1 && noGps.length === 0);

@@ -689,3 +689,9 @@ html, body {
   font-weight: 700;
   white-space: nowrap;
 }
+
+/* Zpráva v čekárně, která brání spuštění hry */
+#lobby-times.blocking {
+  color: var(--danger);
+  font-weight: 600;
+}
