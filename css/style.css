@@ -646,3 +646,20 @@ html, body {
 #status {
   cursor: pointer;
 }
+
+#gps-result.ok {
+  color: #22c55e;
+}
+
+#gps-result.error {
+  color: #fca5a5;
+}
+
+#gps-steps {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+#gps-steps li {
+  margin-bottom: 6px;
+}

@@ -88,9 +88,10 @@
       <div id="gps-box" hidden>
         <p id="gps-msg"></p>
         <button id="gps-allow" type="button" class="primary">Povolit polohu</button>
-        <div id="gps-help" class="muted small" hidden>
-          <p><strong>iPhone:</strong> Nastavení → Soukromí a zabezpečení → Polohové služby → zapnout, a níž <em>Weby Safari</em> → „Při používání aplikace“. Pak Nastavení → Aplikace → Safari → Poloha → „Zeptat se“ nebo „Povolit“. Nakonec tuhle stránku obnov.</p>
-          <p><strong>Android (Chrome):</strong> ťukni na ikonu vlevo od adresy → Oprávnění → Poloha → Povolit, a stránku obnov.</p>
+        <p id="gps-result" class="small" hidden></p>
+        <div id="gps-help" class="small" hidden>
+          <ol id="gps-steps"></ol>
+          <button id="gps-reload" type="button">Hotovo – obnovit stránku</button>
         </div>
       </div>
       <div id="settings" hidden></div>
