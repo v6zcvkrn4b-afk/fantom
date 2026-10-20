@@ -60,7 +60,6 @@ const state = {
   gpsBlocked: ui.get('gpsBlocked') === '1', // prohlížeč polohu zamítá bez dotazu (opakované zamítnutí)
   perm: null,           // oprávnění k poloze: null (zjišťuje se) | granted | prompt | denied | unknown
   firstFixAt: null,     // kdy přišla první poloha
-  lastPreciseAt: null,  // kdy naposledy přišla přesná poloha (do 500 m)
   lastRevealSeen: null, // { phantom, detective } – pro upozornění na nové odhalení
   markersKey: '',
   rev: 0,               // zvýší se s každou novou verzí dat hry (pro překreslení značek)
@@ -79,7 +78,6 @@ function onFix(fix) {
   state.gpsBlocked = false;
   ui.set('gpsBlocked', null);
   if (!state.firstFixAt) state.firstFixAt = Date.now();
-  if (fix.accuracy <= PRECISE_M) state.lastPreciseAt = Date.now();
   state.gpsError = null;
   if (!state.game) setArea(autoArea());
   view.showMe(fix, isPhantom());
@@ -89,9 +87,15 @@ function onFix(fix) {
 }
 
 function onGpsError(code) {
+  // Když telefon stojí, prohlížeč nové polohy neposílá a dotaz může skončit „vypršel čas“ –
+  // poslední známá poloha ale dál platí. Polohu ztratíme jen zákazem (kód 1).
+  if (state.fix && code !== 1) return;
   state.gpsError = code;
   // Poloha je teď zakázaná – příště zase nabídnout tlačítko
-  if (code === 1 && state.perm === 'granted') state.perm = 'denied';
+  if (code === 1) {
+    state.fix = null;
+    if (state.perm === 'granted') state.perm = 'denied';
+  }
   if (!gpsOk()) {
     $('status').classList.add('error');
     $('status').textContent = `${GPS_MESSAGES[code] || 'Chyba GPS'} – klikni sem`;
@@ -99,14 +103,14 @@ function onGpsError(code) {
   reportGps();
 }
 
-// Poloha „funguje“, když přišla za poslední minutu
-const gpsOk = () => Boolean(state.fix && Date.now() - state.fix.receivedAt < 60000);
+// Poloha „funguje“, když nějaká přišla a hráč ji mezitím nezakázal
+const gpsOk = () => Boolean(state.fix);
 // Přesná poloha: prohlížeč nehlásí, jestli je zapnutá, ale přibližná poloha má přesnost
-// v řádu kilometrů – za přesnou bereme takovou, která byla za poslední minutu do 500 m.
+// v řádu kilometrů – za přesnou bereme poslední polohu s přesností do 500 m.
 const PRECISE_M = 500;
-// Dokud se nepřesnost nepotvrdí (prvních 15 s po první poloze se GPS teprve chytá), bereme polohu jako přesnou.
+// Prvních 15 s po první poloze se GPS teprve chytá – do té doby bereme polohu jako přesnou.
 const gpsPrecise = () => Boolean(
-  (state.lastPreciseAt && Date.now() - state.lastPreciseAt < 60000)
+  (state.fix && state.fix.accuracy <= PRECISE_M)
   || (state.firstFixAt && Date.now() - state.firstFixAt < 15000),
 );
 // Připraven ke hře = poloha funguje a je přesná
@@ -238,17 +242,13 @@ function renderGpsBox() {
   if (gpsReady() && !$('gps-modal').hidden) closeGpsModal();
 }
 
-// Kontrola každých 5 s (poloha mohla přestat chodit). Když telefon stojí, nemusí
-// sledování posílat nové polohy – po 25 s si ji proto vyžádáme sami (bez dotazu, je-li povolená).
+// Kontrola každých 5 s. Když telefon stojí, nemusí sledování posílat nové polohy –
+// po 25 s si ji proto vyžádáme sami (bez dotazu, poloha je už povolená).
 let refreshing = false;
 setInterval(() => {
-  if (state.fix && Date.now() - state.fix.receivedAt > 25000 && !refreshing && state.gpsError !== 1) {
+  if (state.fix && Date.now() - state.fix.receivedAt > 25000 && !refreshing) {
     refreshing = true;
     requestPosition().then(onFix, onGpsError).finally(() => { refreshing = false; });
-  }
-  if (state.fix && !gpsOk()) {
-    $('status').classList.add('error');
-    $('status').textContent = 'Poloha se neaktualizuje – klikni sem';
   }
   reportGps();
   if (state.game?.meta?.status === 'lobby') renderGpsBox();
@@ -374,7 +374,10 @@ async function busy(button, fn) {
   button.disabled = true;
   $('home-error').hidden = true;
   try {
-    if (!state.api) throw new Error('ještě se připojuji k serveru');
+    // Kliknutí hned po otevření stránky počká na připojení k serveru (max. 15 s)
+    if (!state.api) {
+      await Promise.race([apiReady, new Promise((_, reject) => setTimeout(() => reject(new Error('server neodpovídá')), 15000))]);
+    }
     await fn();
   } catch (err) {
     homeError(state.api && err instanceof state.api.GameError
@@ -395,34 +398,38 @@ $('go-join').addEventListener('click', () => {
   showStep('code');
 });
 
-$('code-next').addEventListener('click', () => busy($('code-next'), async () => {
+$('code-next').addEventListener('click', () => {
   const code = $('code').value.trim();
   if (!/^\d{4}$/.test(code)) {
     homeError('Kód hry má 4 číslice.');
     return;
   }
   // Ověří kód hned, ať se nepíše přezdívka zbytečně
-  const alreadyIn = await state.api.checkJoinable(code, state.uid);
-  home.code = code;
-  if (alreadyIn) openGame(code);
-  else showStep('name');
-}));
+  busy($('code-next'), async () => {
+    const alreadyIn = await state.api.checkJoinable(code, state.uid);
+    home.code = code;
+    if (alreadyIn) openGame(code);
+    else showStep('name');
+  });
+});
 
-$('name-next').addEventListener('click', () => busy($('name-next'), async () => {
+$('name-next').addEventListener('click', () => {
   const name = $('name').value.trim().slice(0, 20);
   if (!name) {
     homeError('Napiš svou přezdívku.');
     return;
   }
-  store.set('name', name);
-  if (home.mode === 'create') {
-    store.set('map', state.area.id);
-    openGame(await state.api.createGame(state.uid, name, state.area.id));
-  } else {
-    await state.api.joinGame(home.code, state.uid, name);
-    openGame(home.code);
-  }
-}));
+  busy($('name-next'), async () => {
+    store.set('name', name);
+    if (home.mode === 'create') {
+      store.set('map', state.area.id);
+      openGame(await state.api.createGame(state.uid, name, state.area.id));
+    } else {
+      await state.api.joinGame(home.code, state.uid, name);
+      openGame(home.code);
+    }
+  });
+});
 
 $('name-back').addEventListener('click', () => showStep(home.mode === 'join' ? 'code' : 'start'));
 document.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => showStep(b.dataset.back)));
@@ -991,6 +998,8 @@ setInterval(tick, 1000);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') tick(); });
 
 // ---------- Připojení k serveru ----------
+let apiReadyResolve;
+const apiReady = new Promise((resolve) => { apiReadyResolve = resolve; });
 const serverEl = $('server');
 function setOnline(online) {
   serverEl.classList.toggle('online', online);
@@ -1016,11 +1025,14 @@ if (store.get('code') && cached?.code === store.get('code') && cached.game?.play
 }
 (async () => {
   try {
-    // Firebase se načítá zvlášť, aby mapa fungovala, i kdyby se server nepodařilo načíst
+    // Firebase se načítá zvlášť, aby mapa fungovala, i kdyby se server nepodařilo načíst.
+    // state.api se nastaví až po přihlášení – dřív by server zápisy i čtení odmítl.
     const fb = await import('./firebase.js');
-    state.api = await import('./game.js');
+    const api = await import('./game.js');
     state.serverNow = fb.serverNow;
     state.uid = await fb.connect(setOnline);
+    state.api = api;
+    apiReadyResolve();
   } catch (err) {
     setOnline(false);
     showHome(`Nepodařilo se připojit k serveru (${err.code || err.message}). Zkontroluj internet a obnov stránku.`);
