@@ -215,12 +215,17 @@ function reportGps() {
 }
 
 // Panel v čekárně pro hráče bez polohy
+// Panel s návodem se zobrazuje přímo pod vlastním jménem v seznamu hráčů (viz renderLobby),
+// proto si držíme odkaz – při překreslení seznamu se do řádku jen znovu přesune.
+const gpsBox = $('gps-box');
+gpsBox.addEventListener('click', (e) => e.stopPropagation());   // klik v panelu nevybírá Fantoma
+
 function renderGpsBox() {
   const inLobby = state.game?.meta?.status === 'lobby';
   // Panel s návodem až poté, co povolení selhalo, nebo když je poloha nepřesná
   const failed = !gpsOk() && (state.gpsError !== null || state.gpsAsked);
   const imprecise = gpsOk() && !gpsPrecise();
-  $('gps-box').hidden = !inLobby || gpsReady() || !(failed || imprecise);
+  gpsBox.hidden = !inLobby || gpsReady() || !(failed || imprecise);
   if (gpsReady() && !$('gps-modal').hidden) closeGpsModal();
 }
 
@@ -547,6 +552,7 @@ function renderLobby() {
       li.classList.add('pickable');
       li.addEventListener('click', () => state.api?.setPhantom(state.code, uid));
     }
+    if (uid === state.uid) li.append(gpsBox);
     list.append(li);
   }
 

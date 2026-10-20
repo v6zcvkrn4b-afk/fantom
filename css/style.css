@@ -627,6 +627,13 @@ html, body {
   background: var(--danger);
 }
 
+/* Panel s návodem k poloze pod vlastním jménem v seznamu hráčů */
+#lobby-players #gps-box {
+  order: 4;
+  flex-basis: 100%;
+  margin: 10px 0 0;
+}
+
 #gps-box {
   margin: 12px 0;
   padding: 12px 14px;
