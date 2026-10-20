@@ -674,9 +674,3 @@ html, body {
   margin-bottom: 10px;
 }
 
-/* Druhé tlačítko: plné, ale tlumené (ladí s tmavým vzhledem) */
-.card button.secondary {
-  border: 1px solid #4b5563;
-  background: #374151;
-  color: var(--text);
-}
