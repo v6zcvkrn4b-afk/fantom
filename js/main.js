@@ -86,7 +86,7 @@ const GPS_STEPS = {
   ios: [
     INAPP,
     '<b>Nastavení</b> → <b>Soukromí a zabezpečení</b> → <b>Polohové služby</b> → přepínač nahoře musí být <b>zapnutý</b>.',
-    'Ve stejném seznamu sjeď dolů na svůj <b>prohlížeč</b> (Safari, Google, …) → zaklikni <b>Při používání aplikace</b> a zapni <b>Přesná poloha</b>.',
+    'Ve stejném seznamu sjeď dolů na svůj <b>prohlížeč</b> (Safari, Google, …) → zaklikni <b>Při používání aplikace</b> → zapni <b>Přesná poloha</b>.',
     '<b>Nastavení</b> → <b>Aplikace</b> → svůj <b>prohlížeč</b> (Safari, Google, …) → <b>Poloha</b> → zaklikni <b>Zeptat se</b> nebo <b>Povolit</b>.',
     'V <b>prohlížeči</b> (Safari, Google, …) na stránce hry ťukni na ikonu v adresním řádku (<b>aA</b> nebo ikonu vlevo) → <b>Nastavení webu</b> / <b>Oprávnění</b> → <b>Poloha</b> → <b>Povolit</b>.',
     RELOAD,
@@ -95,7 +95,7 @@ const GPS_STEPS = {
     INAPP,
     'Stáhni lištu shora a zkontroluj, že je zapnutá <b>Poloha</b>.',
     'V <b>prohlížeči</b> (Google, Samsung Internet, …) na stránce hry ťukni na ikonu <b>vlevo od adresy</b> → <b>Oprávnění</b> (nebo <b>Nastavení webu</b>) → <b>Poloha</b> → <b>Povolit</b>.',
-    '<b>Nastavení</b> telefonu → <b>Aplikace</b> → svůj <b>prohlížeč</b> (Google, Samsung Internet, …) → <b>Oprávnění</b> → <b>Poloha</b> → zaklikni <b>Povolit jen při používání aplikace</b> a zapni <b>Použít přesnou polohu</b>.',
+    '<b>Nastavení</b> telefonu → <b>Aplikace</b> → svůj <b>prohlížeč</b> (Google, Samsung Internet, …) → <b>Oprávnění</b> → <b>Poloha</b> → zaklikni <b>Povolit jen při používání aplikace</b> → zapni <b>Použít přesnou polohu</b>.',
     RELOAD,
   ],
 };
