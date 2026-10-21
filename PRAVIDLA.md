@@ -1,6 +1,6 @@
 # Fantom – pravidla hry
 
-Městská hra v reálných ulicích pro libovolný počet hráčů (doporučeno 1 Fantom a aspoň 3 detektivové).
+Městská hra v reálných ulicích pro libovolný počet hráčů (doporučeno 1 Fantom a 3–5 detektivů – s méně detektivy je Fantom těžko k chycení, s více nemá šanci).
 
 ## Mapy
 - **Šumperk:** centrum a sever města, asi 2,6 km².

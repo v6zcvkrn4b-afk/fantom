@@ -521,13 +521,6 @@ function render() {
   renderMarkers();
 }
 
-// 1 detektiva, 2–4 detektivy, 5+ detektivů (4. pád: „doporučujeme aspoň …“)
-function detectivesText(n) {
-  if (n === 1) return '1 detektiva';
-  if (n >= 2 && n <= 4) return `${n} detektivy`;
-  return `${n} detektivů`;
-}
-
 function sortedPlayers() {
   return Object.entries(state.game.players).sort((a, b) => (a[1].joinedAt || 0) - (b[1].joinedAt || 0));
 }
@@ -597,7 +590,9 @@ function renderLobby() {
   if (noGps.length) note = `Čeká se na polohu: ${noGps.join(', ')}`;
   else if (!phantomChosen) note = 'Fantom zatím nebyl vybrán.';
   else if (detectives < 1) note = 'Ve hře zatím není žádný detektiv.';
-  else if (detectives < PLAYERS.minDetectives) note = `Doporučujeme aspoň ${detectivesText(PLAYERS.minDetectives)} (teď ${detectives}).`;
+  else if (detectives < PLAYERS.minDetectives || detectives > PLAYERS.maxDetectives) {
+    note = `Doporučujeme ${PLAYERS.minDetectives}–${PLAYERS.maxDetectives} detektivů (teď ${detectives}).`;
+  }
   $('lobby-times').textContent = note;
   // Co brání spuštění je červeně; pouhé doporučení zůstává šedé
   $('lobby-times').classList.toggle('blocking', Boolean(noGps.length || !phantomChosen || detectives < 1));

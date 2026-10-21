@@ -17,6 +17,8 @@ export const LIMITS = {
 };
 
 // Počet hráčů není omezený; po spuštění hry se už nikdo nepřipojí
+// Doporučený počet detektivů (jen doporučení – hru jde spustit i s jiným počtem)
 export const PLAYERS = {
-  minDetectives: 3,      // doporučené minimum (hru lze spustit i s méně, třeba na zkoušku)
+  minDetectives: 3,      // méně: detektivové Fantoma těžko chytí
+  maxDetectives: 5,      // víc: Fantom nemá šanci
 };
