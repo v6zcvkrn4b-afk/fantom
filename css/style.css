@@ -718,3 +718,11 @@ html, body {
 .inapp-or {
   margin: 4px 0 -4px;
 }
+
+.inapp-if {
+  margin: 16px 0 0;
+}
+
+.inapp-if + #inapp-hint {
+  margin-top: 4px;
+}

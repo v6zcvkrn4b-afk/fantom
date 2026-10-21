@@ -24,10 +24,11 @@ if (IN_APP) {
   $('inapp').hidden = false;
   // iPhone: aplikace jako Messenger odkaz do Safari blokují, tlačítko by nic neudělalo – jen návod
   $('inapp-open').hidden = isIos;
+  $('inapp-if').hidden = isIos;
   $('inapp-hint').classList.toggle('small', !isIos);
   $('inapp-hint').textContent = isIos
     ? 'Klikni vpravo nahoře na ⋯ (nebo ikonu sdílení) a vyber otevření v prohlížeči (Safari, Google, …).'
-    : 'Pokud tlačítko nefunguje: klikni vpravo nahoře na ⋮ a vyber otevření v prohlížeči (Google, Samsung Internet, …).';
+    : 'Klikni vpravo nahoře na ⋮ a vyber otevření v prohlížeči (Google, Samsung Internet, …).';
   $('inapp-open').addEventListener('click', () => {
     // Android: „intent“ otevře výchozí prohlížeč
     window.location.href = `intent://${url.replace(/^https?:\/\//, '')}#Intent;scheme=https;end`;
