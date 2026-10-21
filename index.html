@@ -49,6 +49,18 @@
   <button id="locate" type="button" aria-label="Moje poloha">◎</button>
   <button id="caught" type="button" hidden>Byl jsem dopaden</button>
 
+  <!-- Hra otevřená uvnitř Messengeru / Instagramu…: dál to nepustí, dokud se neotevře v prohlížeči -->
+  <section id="inapp" class="screen inapp" hidden>
+    <div class="card center">
+      <h1>FANTOM</h1>
+      <p class="gps-title">Otevři hru v prohlížeči</p>
+      <p class="muted">Hra je otevřená uvnitř jiné aplikace (Messenger, Instagram, WhatsApp…). Tam nefunguje poloha, a bez ní nejde hrát.</p>
+      <button id="inapp-open" type="button" class="primary">Otevřít v prohlížeči</button>
+      <p id="inapp-hint" class="muted small"></p>
+      <button id="inapp-copy" type="button">Zkopírovat odkaz</button>
+    </div>
+  </section>
+
   <!-- Načítání rozehrané hry (po obnovení stránky v nové záložce) -->
   <section id="loading" class="screen" hidden>
     <div class="card center">

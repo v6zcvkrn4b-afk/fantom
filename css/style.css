@@ -702,3 +702,15 @@ html, body {
   font-size: 14px;
   line-height: 1.4;
 }
+
+/* Hra otevřená uvnitř jiné aplikace: přes všechno */
+.screen.inapp {
+  z-index: 6000;
+  background: var(--bg);
+}
+
+.inapp .gps-title {
+  margin: 12px 0 4px;
+  font-size: 18px;
+  font-weight: 700;
+}

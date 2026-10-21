@@ -32,6 +32,7 @@ Mapa se vybere automaticky podle polohy toho, kdo hru zakládá (mapa, ve které
 Když zakladatel opustí čekárnu, roli zakladatele dostane hráč, který se připojil nejdřív. Byl-li odcházející zakladatel vybraný jako Fantom, výběr Fantoma se zruší.
 
 ## Poloha v čekárně
+- Hra otevřená uvnitř jiné aplikace (Messenger, Instagram, WhatsApp…) nepustí hráče ani na úvodní obrazovku – nabídne jen otevření v prohlížeči (Safari, Google, …) nebo zkopírování odkazu, protože tyto aplikace nepustí polohu.
 - Telefon se na polohu sám nezeptá. Hráč, který ji ještě nepovolil, má u svého jména v čekárně tlačítko **Povolit polohu** – teprve po kliknutí se ukáže dotaz telefonu. Kdo polohu povolil už dřív, nemusí dělat nic.
 - U každého hráče v čekárně je puntík: 🟢 poloha povolená a funkční, 🔴 poloha chybí.
 - Když povolení selže, hráč vidí panel „Poloha NENÍ povolena – bez ní nejde hrát“ s tlačítkem **Obnovit stránku** a tlačítkem **Jak povolit polohu**, které otevře návod podle telefonu (iPhone / Android).

@@ -13,6 +13,34 @@ import { createWheel } from './wheel.js';
 
 const $ = (id) => document.getElementById(id);
 
+// ---------- Hra otevřená uvnitř jiné aplikace ----------
+// Vestavěné prohlížeče Messengeru, Instagramu, WhatsAppu… nepustí polohu. Takový hráč
+// se dál nedostane – dostane jen tlačítko pro otevření v běžném prohlížeči.
+const UA = navigator.userAgent;
+const IN_APP = /FBAN|FBAV|FB_IAB|FBIOS|Messenger|Instagram|WhatsApp|Snapchat|musical_ly|BytedanceWebview|Line\/|; wv\)/i.test(UA);
+if (IN_APP) {
+  const isIos = /iPhone|iPad|iPod/.test(UA);
+  const url = window.location.href;
+  $('inapp').hidden = false;
+  $('inapp-hint').textContent = isIos
+    ? 'Když tlačítko nefunguje: klikni vpravo nahoře na ⋯ (nebo ikonu sdílení) a vyber otevření v prohlížeči (Safari, Google, …).'
+    : 'Když tlačítko nefunguje: klikni vpravo nahoře na ⋮ a vyber otevření v prohlížeči (Google, Samsung Internet, …).';
+  $('inapp-open').addEventListener('click', () => {
+    // iPhone: speciální adresa otevře Safari; Android: „intent“ otevře výchozí prohlížeč
+    window.location.href = isIos
+      ? `x-safari-${url}`
+      : `intent://${url.replace(/^https?:\/\//, '')}#Intent;scheme=https;end`;
+  });
+  $('inapp-copy').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      $('inapp-copy').textContent = 'Odkaz zkopírován – vlož ho do prohlížeče';
+    } catch {
+      window.prompt('Zkopíruj odkaz a vlož ho do prohlížeče:', url);
+    }
+  });
+}
+
 // Uložení v telefonu (přezdívka, kód rozehrané hry). Může být nedostupné, proto try/catch.
 const store = {
   get(key) {
@@ -158,11 +186,9 @@ function askGps(button) {
 
 // Web polohu zapnout sám nesmí. Hráč bez polohy dostane radu obnovit stránku
 // a návod podle telefonu (okno „Jak povolit polohu“).
-const INAPP = 'Pokud máš hru otevřenou přes odkaz v Messengeru, Instagramu, WhatsAppu nebo jiné aplikaci, otevři ji přímo v <b>prohlížeči</b> (Safari, Google, …).';
 const RELOAD = 'Vrať se sem a klikni na <b>Hotovo – obnovit stránku</b>. Když se telefon zeptá na polohu, dej <b>Povolit</b>.';
 const GPS_STEPS = {
   ios: [
-    INAPP,
     '<b>Nastavení</b> → <b>Soukromí a zabezpečení</b> → <b>Polohové služby</b> → přepínač nahoře musí být <b>zapnutý</b>.',
     'Ve stejném seznamu sjeď dolů na <b>prohlížeč, který používáš</b> (Safari, Google, …) → zaklikni <b>Při používání aplikace</b> → zapni <b>Přesná poloha</b>.',
     '<b>Nastavení</b> → <b>Aplikace</b> → <b>prohlížeč</b> (Safari, Google, …) → <b>Poloha</b> → zaklikni <b>Zeptat se</b> nebo <b>Povolit</b>.',
@@ -170,7 +196,6 @@ const GPS_STEPS = {
     RELOAD,
   ],
   android: [
-    INAPP,
     'Stáhni lištu shora a zkontroluj, že je zapnutá <b>Poloha</b>.',
     'V <b>prohlížeči</b> (Google, Samsung Internet, …) na stránce hry klikni na ikonu <b>vlevo od adresy</b> → <b>Oprávnění</b> (nebo <b>Nastavení webu</b>) → <b>Poloha</b> → <b>Povolit</b>.',
     '<b>Nastavení</b> telefonu → <b>Aplikace</b> → <b>prohlížeč</b> (Google, Samsung Internet, …) → <b>Oprávnění</b> → <b>Poloha</b> → zaklikni <b>Povolit jen při používání aplikace</b> → zapni <b>Použít přesnou polohu</b>.',
