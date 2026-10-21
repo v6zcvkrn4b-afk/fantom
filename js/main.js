@@ -23,8 +23,8 @@ if (IN_APP) {
   const url = window.location.href;
   $('inapp').hidden = false;
   $('inapp-hint').textContent = isIos
-    ? 'Když tlačítko nefunguje: klikni vpravo nahoře na ⋯ (nebo ikonu sdílení) a vyber otevření v prohlížeči (Safari, Google, …).'
-    : 'Když tlačítko nefunguje: klikni vpravo nahoře na ⋮ a vyber otevření v prohlížeči (Google, Samsung Internet, …).';
+    ? 'Pokud tlačítko nefunguje: klikni vpravo nahoře na ⋯ (nebo ikonu sdílení) a vyber otevření v prohlížeči (Safari, Google, …).'
+    : 'Pokud tlačítko nefunguje: klikni vpravo nahoře na ⋮ a vyber otevření v prohlížeči (Google, Samsung Internet, …).';
   $('inapp-open').addEventListener('click', () => {
     // iPhone: speciální adresa otevře Safari; Android: „intent“ otevře výchozí prohlížeč
     window.location.href = isIos

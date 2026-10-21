@@ -714,3 +714,7 @@ html, body {
   font-size: 18px;
   font-weight: 700;
 }
+
+.inapp-or {
+  margin: 4px 0 -4px;
+}
