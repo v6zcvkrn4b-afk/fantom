@@ -521,6 +521,13 @@ function render() {
   renderMarkers();
 }
 
+// 1 detektiva, 2–4 detektivy, 5+ detektivů (4. pád: „doporučujeme aspoň …“)
+function detectivesText(n) {
+  if (n === 1) return '1 detektiva';
+  if (n >= 2 && n <= 4) return `${n} detektivy`;
+  return `${n} detektivů`;
+}
+
 function sortedPlayers() {
   return Object.entries(state.game.players).sort((a, b) => (a[1].joinedAt || 0) - (b[1].joinedAt || 0));
 }
@@ -590,7 +597,7 @@ function renderLobby() {
   if (noGps.length) note = `Čeká se na polohu: ${noGps.join(', ')}`;
   else if (!phantomChosen) note = 'Fantom zatím nebyl vybrán.';
   else if (detectives < 1) note = 'Ve hře zatím není žádný detektiv.';
-  else if (detectives < PLAYERS.minDetectives) note = `Doporučeno je aspoň ${PLAYERS.minDetectives} detektivů (teď ${detectives}).`;
+  else if (detectives < PLAYERS.minDetectives) note = `Doporučujeme aspoň ${detectivesText(PLAYERS.minDetectives)} (teď ${detectives}).`;
   $('lobby-times').textContent = note;
   // Co brání spuštění je červeně; pouhé doporučení zůstává šedé
   $('lobby-times').classList.toggle('blocking', Boolean(noGps.length || !phantomChosen || detectives < 1));
@@ -630,7 +637,7 @@ function buildSettings(readOnly) {
   const save = (changes) => (state.api ? state.api.updateTimes : () => Promise.resolve())(state.code, { ...normalizeTimes(state.game.meta.times), ...changes })
     .catch((err) => window.alert(`Nastavení se nepodařilo uložit (${err.code || err.message}).`));
 
-  function addPicker(key, label, wheelDefs) {
+  function addPicker(key, label, wheelDefs, help) {
     const item = document.createElement('div');
     const row = document.createElement('button');
     row.type = 'button';
@@ -639,6 +646,25 @@ function buildSettings(readOnly) {
     name.textContent = label;
     const value = document.createElement('strong');
     row.append(name, value);
+    item.append(row);
+    // Otazník s krátkým vysvětlením (otevře/zavře text pod řádkem, nerozbaluje váleček)
+    if (help) {
+      const q = document.createElement('span');
+      q.className = 'help';
+      q.setAttribute('role', 'button');
+      q.setAttribute('aria-label', 'Vysvětlení');
+      q.textContent = '?';
+      const text = document.createElement('p');
+      text.className = 'help-text';
+      text.textContent = help;
+      text.hidden = true;
+      q.addEventListener('click', (e) => {
+        e.stopPropagation();
+        text.hidden = !text.hidden;
+      });
+      name.append(q);
+      item.append(text);
+    }
     const picker = document.createElement('div');
     picker.className = 'set-picker';
     picker.hidden = true;
@@ -661,7 +687,7 @@ function buildSettings(readOnly) {
         wheels.forEach((w) => w.sync());
       }
     });
-    item.append(row, picker);
+    item.append(picker);
     box.append(item);
     rows[key] = { item, row, value, picker, wheels };
   }
@@ -672,13 +698,13 @@ function buildSettings(readOnly) {
   }
 
   const every = LIMITS.everyMin;
-  addPicker('headStart', 'Náskok Fantoma', [
-    { min: LIMITS.headStartMin[0], max: LIMITS.headStartMin[1], value: t0.headStartMin, unit: 'min', onChange: (v) => save({ headStartMin: v }) },
-  ]);
   addPicker('chase', 'Délka hry', [
     { min: LIMITS.chaseHours[0], max: LIMITS.chaseHours[1], value: Math.floor(t0.chaseMin / 60), unit: 'h', onChange: saveChase },
     { min: 0, max: 59, value: t0.chaseMin % 60, unit: 'min', onChange: saveChase },
   ]);
+  addPicker('headStart', 'Náskok Fantoma', [
+    { min: LIMITS.headStartMin[0], max: LIMITS.headStartMin[1], value: t0.headStartMin, unit: 'min', onChange: (v) => save({ headStartMin: v }) },
+  ], 'Čas na začátku hry, kdy Fantom utíká a schovává se. Detektivové zatím čekají a ničí poloha se ještě neukazuje. Délka hry se začne odpočítávat až po skončení náskoku.');
   addPicker('phantomEvery', 'Fantom se ukazuje každých', [
     { min: every[0], max: every[1], value: t0.phantomEveryMin, unit: 'min', onChange: (v) => save({ phantomEveryMin: v }) },
   ]);

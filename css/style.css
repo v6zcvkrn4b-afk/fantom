@@ -678,3 +678,27 @@ html, body {
   color: var(--danger);
   font-weight: 600;
 }
+
+/* Otazník s vysvětlením u položky nastavení */
+.help {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-left: 8px;
+  border: 1px solid var(--muted);
+  border-radius: 50%;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  vertical-align: 2px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.help-text {
+  margin: 4px 2px 10px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.4;
+}
