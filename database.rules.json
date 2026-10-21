@@ -38,6 +38,24 @@
           }
         }
       }
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "name": {
+          ".validate": "newData.isString() && newData.val().length >= 3 && newData.val().length <= 20"
+        },
+        "times": {
+          ".validate": "newData.child('headStartMin').isNumber() && newData.child('headStartMin').val() >= 0 && newData.child('headStartMin').val() <= 60 && newData.child('chaseMin').isNumber() && newData.child('chaseMin').val() >= 1 && newData.child('chaseMin').val() <= 240 && newData.child('phantomEveryMin').isNumber() && newData.child('phantomEveryMin').val() >= 1 && newData.child('phantomEveryMin').val() <= 60 && newData.child('detectiveEveryMin').isNumber() && newData.child('detectiveEveryMin').val() >= 1 && newData.child('detectiveEveryMin').val() <= 60 && newData.child('detectiveVisibility').isString() && newData.child('detectiveVisibility').val().matches(/^(all|detectives|phantom|none)$/) && (!newData.child('showDetectiveNames').exists() || newData.child('showDetectiveNames').isBoolean())"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
     }
   }
 }

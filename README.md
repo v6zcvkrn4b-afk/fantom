@@ -14,11 +14,16 @@ Každá změna nahraná (push) do větve `main` se do minuty objeví na adrese v
 
 ## Struktura
 ```
-index.html            vstupní stránka (hra)
-mapa.html             jen prohlížení map a hranic (bez hry)
+index.html            úvodní stránka (Hrát / Mapy / Profil)
+hra.html              samotná hra
+mapy.html             přehled všech map s náhledem
+mapa.html             celá mapa jednoho území (bez hry)
+profil.html           přihlášení jménem a heslem, oblíbené nastavení hry
 manifest.webmanifest  nastavení pro „Přidat na plochu“ v telefonu
 css/style.css         vzhled
 js/main.js            obrazovky a průběh hry
+js/account.js         účet hráče: registrace, přihlášení, profil
+js/settings.js        nastavení hry s válečky (čekárna i profil)
 js/game.js            zakládání/připojení ke hře, zápisy do databáze
 js/timing.js          časová osa hry (náskok, odhalení, konec)
 js/mapview.js         mapa, hranice území a značky hráčů

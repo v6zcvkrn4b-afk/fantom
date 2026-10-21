@@ -8,6 +8,7 @@ export const MAPS = {
     id: 'sumperk',
     name: 'Šumperk',
     tagline: 'Dopadněte Fantoma v ulicích Šumperka.',
+    about: 'Centrum a sever města: náměstí, Reissova, Jesenická a lesní cesty kolem Holubího vrchu a Vyhlídky.',
     // Hranice herního území [zeměpisná šířka, délka] podle nákresu uživatele (2026-10-19),
     // vedená přesně po ulicích z OpenStreetMap: Reissova, J. z Poděbrad, nám. Republiky,
     // Havlíčkova, Husovo nám., Dr. E. Beneše, Masarykovo nám., Jeremenkova, Lidická,
@@ -139,6 +140,7 @@ export const MAPS = {
     id: 'brno',
     name: 'Brno',
     tagline: 'Dopadněte Fantoma v ulicích Brna.',
+    about: 'Královo Pole a kampusy VUT: Pod Palackého vrchem s Fakultou chemickou, FIT na Božetěchově, Palackého třída a Kolejní.',
     // Královo Pole a kampusy VUT (Pod Palackého vrchem vč. FCH, FIT na Božetěchově), upraveno
     // podle uživatele 2026-10-20: na severu cesta podél vozovny z Purkyňovy na Hudcovu, Palackého
     // třída, Dalimilova, Božetěchova, Mojmírovo nám., Košinova, Dobrovského (přes objezd s Hradeckou
@@ -265,6 +267,7 @@ export const MAPS = {
     id: 'stramberk',
     name: 'Štramberk',
     tagline: 'Dopadněte Fantoma v ulicích Štramberka.',
+    about: 'Celé město včetně Trúby, náměstí, jeskyně Šipka, Bílé hory a Kamenárky. Lom Kotouč je mimo území.',
     // Celý Štramberk (2026-10-20): Novojičínská, Závišická, oblouk přes pole na K Očnímu, sever
     // po U Vodojemu, východ po lesních cestách pod Bílou horou, Hraničky, Zauličí, přes kopec
     // Šipka, Plaňava, Dolní a Hornychovice. Uvnitř Trúba, náměstí, Šipka, Bílá hora, Kamenárka.
@@ -558,3 +561,15 @@ export function pickArea(lat, lng) {
 }
 
 export const getArea = (id) => MAPS[id] || MAPS[DEFAULT_MAP];
+
+// Rozloha území v km² (přibližně, pro popis mapy)
+export function areaKm2(area) {
+  const lat0 = (area.boundary.reduce((s, p) => s + p[0], 0) / area.boundary.length) * Math.PI / 180;
+  const kx = 111.32 * Math.cos(lat0);
+  let sum = 0;
+  area.boundary.forEach(([lat, lng], i) => {
+    const [lat2, lng2] = area.boundary[(i + 1) % area.boundary.length];
+    sum += lng * kx * lat2 * 110.57 - lng2 * kx * lat * 110.57;
+  });
+  return Math.abs(sum) / 2;
+}

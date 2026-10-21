@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="cs" class="page">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Fantom – profil</title>
+  <meta name="theme-color" content="#0b0d1a">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="page-head">
+    <a href="./" class="back">← Fantom</a>
+    <span class="logo">Profil</span>
+  </header>
+
+  <main class="page-main">
+    <p id="loading" class="note center">Načítám…</p>
+
+    <!-- Nepřihlášený: přihlášení / nový účet -->
+    <form id="auth" class="card" hidden novalidate>
+      <div class="segmented auth-tabs">
+        <button type="button" data-mode="login" class="active">Přihlásit se</button>
+        <button type="button" data-mode="register">Nový účet</button>
+      </div>
+      <label for="username">Uživatelské jméno</label>
+      <input id="username" type="text" maxlength="20" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="např. Sherlock">
+      <label for="password">Heslo</label>
+      <input id="password" type="password" autocomplete="current-password">
+      <div id="password2-row" hidden>
+        <label for="password2">Heslo znovu</label>
+        <input id="password2" type="password" autocomplete="new-password">
+      </div>
+      <button id="submit" type="submit" class="primary">Přihlásit se</button>
+      <p id="auth-error" class="error" hidden></p>
+      <p id="auth-note" class="note"></p>
+    </form>
+
+    <!-- Přihlášený: jméno a oblíbené nastavení hry -->
+    <section id="me" hidden>
+      <div class="card center">
+        <div id="avatar" class="avatar"></div>
+        <h2 id="me-name" class="profile-name"></h2>
+        <p class="note">Uživatelské jméno je zároveň tvoje přezdívka ve hře – při zakládání ani připojování ke hře ji nemusíš psát.</p>
+      </div>
+      <div class="card">
+        <h2>Oblíbené nastavení hry</h2>
+        <p class="note">Když hru zakládáš ty, nastaví se takhle. V čekárně ho pak ještě můžeš upravit. Změny se ukládají hned.</p>
+        <div id="settings"></div>
+        <p id="saved" class="saved"></p>
+        <button id="reset" type="button">Vrátit výchozí nastavení</button>
+      </div>
+      <div class="card">
+        <button id="logout" type="button">Odhlásit se</button>
+        <p id="me-error" class="error" hidden></p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import {
+      register, login, logout, loadProfile, saveTimes, activeGameCode, AccountError, NAME_MIN, NAME_MAX, PASSWORD_MIN,
+    } from './js/account.js';
+    import { createSettings } from './js/settings.js';
+    import { TIMES } from './js/config.js';
+    import { normalizeTimes } from './js/timing.js';
+
+    const $ = (id) => document.getElementById(id);
+    let mode = 'login';
+
+    const NOTES = {
+      login: 'Přihlášení je dobrovolné – hrát jde i bez něj. Přihlášený hráč nemusí psát přezdívku a jako zakladatel hry dostane svoje oblíbené nastavení.',
+      register: `Uživatelské jméno (${NAME_MIN}–${NAME_MAX} znaků) bude zároveň tvoje přezdívka ve hře. Heslo aspoň ${PASSWORD_MIN} znaků – dobře si ho zapamatuj, bez e-mailu ho nejde obnovit.`,
+    };
+
+    function setMode(next) {
+      mode = next;
+      document.querySelectorAll('[data-mode]').forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
+      $('password2-row').hidden = mode !== 'register';
+      $('password').autocomplete = mode === 'register' ? 'new-password' : 'current-password';
+      $('submit').textContent = mode === 'register' ? 'Vytvořit účet' : 'Přihlásit se';
+      $('auth-note').textContent = NOTES[mode];
+      $('auth-error').hidden = true;
+    }
+    document.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+    function showError(el, err) {
+      el.textContent = err instanceof AccountError ? err.message : `Něco se nepovedlo (${err?.code || err?.message || err}).`;
+      el.hidden = false;
+    }
+
+    // Přihlášení / odhlášení změní id hráče – z rozehrané hry by vypadl, proto to tehdy nejde.
+    // Hra, která už skončila, se zapomene.
+    async function checkNoGame(action) {
+      const code = await activeGameCode();
+      if (code) throw new AccountError(`Jsi v rozehrané hře ${code}. ${action} se můžeš, až ji dohraješ nebo opustíš.`);
+      try { localStorage.removeItem('fantom.code'); } catch { /* bez uložení */ }
+    }
+
+    $('auth').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const button = $('submit');
+      button.disabled = true;
+      $('auth-error').hidden = true;
+      try {
+        let profile;
+        if (mode === 'register') {
+          if ($('password').value !== $('password2').value) throw new AccountError('Hesla se neshodují.');
+          // Registrace zachová id hráče, rozehraná hra nevadí
+          profile = await register($('username').value, $('password').value);
+        } else {
+          await checkNoGame('Přihlásit');
+          profile = await login($('username').value, $('password').value);
+        }
+        showMe(profile);
+      } catch (err) {
+        showError($('auth-error'), err);
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    // ---------- Přihlášený ----------
+    let current = null;
+    let editor = null;
+    let savedTimer = null;
+
+    function saved(text, error) {
+      clearTimeout(savedTimer);
+      $('saved').textContent = text;
+      $('saved').classList.toggle('error', Boolean(error));
+      if (!error) savedTimer = setTimeout(() => { $('saved').textContent = ''; }, 2500);
+    }
+
+    function save(changes) {
+      current = { ...current, ...changes };
+      editor.update(current);
+      saveTimes(current).then(() => saved('Uloženo ✓'), (err) => saved(`Nepodařilo se uložit: ${err.message}`, true));
+    }
+
+    function showMe(profile) {
+      $('loading').hidden = true;
+      $('auth').hidden = true;
+      $('me').hidden = false;
+      $('me-name').textContent = profile.name;
+      $('avatar').textContent = profile.name.charAt(0).toUpperCase();
+      current = profile.times;
+      editor = createSettings($('settings'), { times: current, save });
+      editor.update(current);
+    }
+
+    function showAuth() {
+      $('loading').hidden = true;
+      $('me').hidden = true;
+      $('auth').hidden = false;
+      $('password').value = '';
+      $('password2').value = '';
+      setMode(mode);
+    }
+
+    $('reset').addEventListener('click', () => save(normalizeTimes(TIMES)));
+
+    $('logout').addEventListener('click', async () => {
+      $('logout').disabled = true;
+      $('me-error').hidden = true;
+      try {
+        await checkNoGame('Odhlásit');
+        await logout();
+        showAuth();
+      } catch (err) {
+        showError($('me-error'), err);
+      } finally {
+        $('logout').disabled = false;
+      }
+    });
+
+    loadProfile().then((p) => (p ? showMe(p) : showAuth()), (err) => {
+      showAuth();
+      showError($('auth-error'), err);
+    });
+  </script>
+</body>
+</html>

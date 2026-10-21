@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Fantom – hra</title>
+  <meta name="description" content="Dopadni Fantoma! Městská hra pro detektivy v ulicích.">
+  <meta name="theme-color" content="#0b0d1a">
+
+  <!-- Spuštění jako aplikace z plochy telefonu -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Fantom">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+  <!-- Mapy: Leaflet + OpenStreetMap -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="map"></div>
+
+  <header id="topbar">
+    <span class="title">FANTOM <span id="server" class="dot" title="Spojení se serverem"></span></span>
+    <span id="status">Zjišťuji polohu…</span>
+  </header>
+
+  <!-- Herní panel (během hry) -->
+  <div id="hud" hidden>
+    <div class="hud-row">
+      <span id="role" class="chip"></span>
+      <span id="phase"></span>
+    </div>
+    <div class="hud-row">
+      <span id="next-label" class="hud-label"></span><strong id="next-reveal" class="big"></strong>
+      <span class="hud-label">Konec za</span><strong id="time-left"></strong>
+    </div>
+    <div id="det-row" class="hud-row">
+      <span id="det-label" class="hud-label"></span><strong id="det-reveal"></strong>
+    </div>
+    <div id="hud-note"></div>
+  </div>
+  <div id="outside" hidden></div>
+  <div id="warn" hidden>⚠️ Jsi MIMO herní území – vrať se!</div>
+
+  <button id="locate" type="button" aria-label="Moje poloha">◎</button>
+  <button id="caught" type="button" hidden>Byl jsem dopaden</button>
+
+  <!-- Hra otevřená uvnitř Messengeru / Instagramu…: dál to nepustí, dokud se neotevře v prohlížeči -->
+  <section id="inapp" class="screen inapp" hidden>
+    <div class="card center">
+      <h1>FANTOM</h1>
+      <p class="gps-title">Otevři hru v prohlížeči</p>
+      <p class="muted">Hra je otevřená uvnitř jiné aplikace (Messenger, Instagram, WhatsApp…). Tam nefunguje poloha, a bez ní nejde hrát.</p>
+      <button id="inapp-open" type="button" class="primary">Otevřít v prohlížeči</button>
+      <p id="inapp-if" class="inapp-if">Pokud tlačítko nefunguje:</p>
+      <p id="inapp-hint" class="muted small"></p>
+      <p class="muted small inapp-or">nebo</p>
+      <button id="inapp-copy" type="button">Zkopírovat odkaz</button>
+    </div>
+  </section>
+
+  <!-- Načítání rozehrané hry (po obnovení stránky v nové záložce) -->
+  <section id="loading" class="screen" hidden>
+    <div class="card center">
+      <p class="muted">Načítám hru…</p>
+    </div>
+  </section>
+
+  <!-- Úvodní obrazovka: kroky výběr → (kód) → přezdívka -->
+  <section id="home" class="screen" hidden>
+    <div class="card">
+      <h1>FANTOM</h1>
+      <p id="tagline" class="muted center">Dopadněte Fantoma v ulicích vašeho města.</p>
+
+      <div id="step-start">
+        <button id="go-create" type="button" class="primary">Založit novou hru</button>
+        <button id="go-join" type="button">Připojit se ke hře</button>
+      </div>
+
+      <div id="step-code" hidden>
+        <label for="code">Kód hry</label>
+        <input id="code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="1234" autocomplete="off">
+        <button id="code-next" type="button" class="primary">Pokračovat</button>
+        <button type="button" class="link back" data-back="start">Zpět</button>
+      </div>
+
+      <div id="step-name" hidden>
+        <label for="name">Tvoje přezdívka</label>
+        <input id="name" type="text" maxlength="20" autocomplete="nickname" placeholder="např. Sherlock">
+        <button id="name-next" type="button" class="primary"></button>
+        <button id="name-back" type="button" class="link back">Zpět</button>
+      </div>
+
+      <p id="home-error" class="error" hidden></p>
+      <p id="home-who" class="muted small center home-who"></p>
+      <a href="./" class="home-back">← Hlavní stránka</a>
+    </div>
+  </section>
+
+  <!-- Čekárna před startem -->
+  <section id="lobby" class="screen" hidden>
+    <div class="card">
+      <p class="muted center">Kód hry:</p>
+      <div id="lobby-code" class="code"></div>
+      <p id="lobby-hint" class="muted"></p>
+      <ul id="lobby-players"></ul>
+      <div id="gps-box" hidden>
+        <p class="gps-title">🔴 Poloha NENÍ povolena – bez ní nejde hrát.</p>
+        <div id="gps-retry">
+          <p>Zkus obnovit stránku a povolit polohu.</p>
+          <button id="gps-reload" type="button" class="primary">Obnovit stránku</button>
+          <p class="gps-more">Pokud to stále nejde:</p>
+        </div>
+        <p id="gps-blocked" hidden>Telefon se na polohu už neptá (po opakovaném zamítnutí ji prohlížeč blokuje). Povol ji v nastavení:</p>
+        <button id="gps-howto" type="button" class="primary">Jak povolit polohu</button>
+      </div>
+      <div id="settings" hidden></div>
+      <p id="lobby-times" class="muted small"></p>
+      <button id="start" type="button" class="primary" hidden>Spustit hru</button>
+      <p id="lobby-wait" class="muted center" hidden>Čeká se, až zakladatel hru spustí…</p>
+      <button id="leave" type="button" class="link">Opustit hru</button>
+    </div>
+  </section>
+
+  <!-- Návod na povolení polohy -->
+  <section id="gps-modal" class="screen modal" hidden>
+    <div class="card">
+      <h2>Jak povolit polohu</h2>
+      <div id="gps-pick">
+        <p class="muted">Jaký máš telefon?</p>
+        <button type="button" class="primary" data-phone="ios">iPhone</button>
+        <button type="button" class="primary" data-phone="android">Android</button>
+      </div>
+      <div id="gps-guide" hidden>
+        <p class="muted">Zkontroluj postupně a zaklikni, co je potřeba:</p>
+        <ol id="gps-steps"></ol>
+        <button id="gps-reload2" type="button" class="primary">Hotovo – obnovit stránku</button>
+        <button id="gps-back" type="button">Zpět na výběr telefonu</button>
+      </div>
+      <button id="gps-close" type="button" class="link">Zavřít</button>
+    </div>
+  </section>
+
+  <!-- Potvrzení a chybová hlášení (místo systémových oken prohlížeče) -->
+  <section id="dialog" class="screen modal dialog" hidden>
+    <div class="card center" role="alertdialog" aria-labelledby="dialog-title">
+      <h2 id="dialog-title"></h2>
+      <p id="dialog-text" class="muted"></p>
+      <button id="dialog-ok" type="button" class="primary"></button>
+      <button id="dialog-cancel" type="button"></button>
+    </div>
+  </section>
+
+  <!-- Výsledek -->
+  <section id="result" class="screen" hidden>
+    <div class="card center">
+      <div id="result-icon" class="result-icon"></div>
+      <h1 id="result-title"></h1>
+      <p id="result-text" class="muted"></p>
+      <button id="show-map" type="button" class="primary">Ukázat trasu Fantoma</button>
+      <button id="new-game" type="button">Nová hra</button>
+    </div>
+  </section>
+  <button id="back-result" type="button" hidden>Zpět na výsledek</button>
+
+  <!-- Na telefonu otočeném na šířku hru zakryje (hraje se jen na výšku) -->
+  <div id="rotate">
+    <div class="rotate-icon">📱</div>
+    <p>Otoč telefon na výšku</p>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

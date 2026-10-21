@@ -10,6 +10,12 @@ Městská hra v reálných ulicích pro libovolný počet hráčů (doporučeno 
 
 Mapa se vybere automaticky podle polohy toho, kdo hru zakládá (mapa, ve které je, jinak nejbližší). Dokud zakladatel nemá povolenou polohu, je u mapy „–“ a hru nejde spustit. Připojení hráči hrají na mapě dané hry. V nastavení hry je mapa uvedená jen pro informaci. Mapu jde vynutit v adrese, např. `…/fantom/?mapa=brno` nebo `?mapa=sumperk`.
 
+## Účet hráče
+- Přihlášení je **dobrovolné** – hrát jde i bez něj (stránka Profil).
+- Přihlašuje se **uživatelským jménem a heslem**. Uživatelské jméno (3–20 znaků) je zároveň přezdívka ve hře, přihlášený hráč ji při zakládání ani připojování ke hře nepíše. Na velikosti písmen a háčcích nezáleží („Štěpán“ = „stepan“). Heslo má aspoň 6 znaků a nejde obnovit (účet nemá e-mail).
+- V profilu si hráč nastaví **oblíbené nastavení hry**. Když hru zakládá, čekárna začne s tímto nastavením (dá se dál upravit).
+- Přihlásit nebo odhlásit se nejde během rozehrané hry (hráč by z ní vypadl); vytvořit nový účet jde kdykoli.
+
 ## Role
 - **Fantom** (1 hráč) utíká a skrývá se.
 - **Detektivové** (kolik hráčů se připojí) ho hledají a snaží se ho dopadnout. Připojit se dá jen v čekárně; po spuštění hry už ne.

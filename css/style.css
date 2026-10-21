@@ -758,3 +758,360 @@ html, body {
 .inapp-if + #inapp-hint {
   margin-top: 4px;
 }
+
+/* ---------- Stránky mimo hru (úvod, mapy, profil) ---------- */
+/* Na rozdíl od hry (mapa přes celou obrazovku) se tyto stránky normálně posouvají */
+html.page,
+html.page body {
+  height: auto;
+  min-height: 100%;
+  overflow: auto;
+}
+
+html.page body {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 32px);
+}
+
+.page-head {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: calc(env(safe-area-inset-top) + 12px) 16px 12px;
+  background: var(--panel);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.page-head .logo {
+  color: var(--text);
+  font-family: Georgia, serif;
+  font-size: 20px;
+  letter-spacing: 2px;
+  text-decoration: none;
+}
+
+.page-head .back {
+  color: var(--text);
+  font-size: 17px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* Přihlásit / jméno přihlášeného vpravo nahoře */
+.who {
+  max-width: 55%;
+  overflow: hidden;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.who.guest {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.page-main {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.page-main h2 {
+  margin: 32px 0 12px;
+  font-size: 20px;
+}
+
+.page-main .card {
+  margin: 16px 0;
+}
+
+.page-main .card h2 {
+  margin: 0 0 8px;
+}
+
+/* Úvod */
+.hero {
+  padding: 40px 0 8px;
+  text-align: center;
+}
+
+.hero-ghost {
+  font-size: 56px;
+  line-height: 1;
+}
+
+.hero h1 {
+  margin: 12px 0 8px;
+  font-family: Georgia, serif;
+  font-size: 48px;
+  font-weight: 400;
+  letter-spacing: 6px;
+}
+
+.hero p {
+  margin: 0 auto;
+  max-width: 360px;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+/* Rozehraná hra */
+.resume {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 24px 0 0;
+  padding: 14px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 14px;
+  background: rgba(251, 191, 36, 0.1);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.resume strong {
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+/* Velké dlaždice sekcí */
+.tiles {
+  display: grid;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.tile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.tile:active {
+  transform: scale(0.98);
+}
+
+.tile-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 26px;
+}
+
+.tile-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.tile-text strong {
+  display: block;
+  font-size: 19px;
+}
+
+.tile-text span {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.tile::after {
+  content: "›";
+  color: var(--muted);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.tile.primary {
+  border: none;
+  background: var(--accent);
+  color: #111;
+}
+
+.tile.primary .tile-text span,
+.tile.primary::after {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.tile.primary .tile-icon {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.steps {
+  margin: 0;
+  padding-left: 22px;
+  line-height: 1.5;
+}
+
+.steps li {
+  margin-bottom: 10px;
+}
+
+.steps li::marker {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* Mapy */
+.map-card {
+  overflow: hidden;
+  margin: 16px 0;
+  border-radius: 16px;
+  background: var(--card);
+}
+
+.map-mini {
+  height: 200px;
+  background: #ddd;
+}
+
+.map-card-body {
+  padding: 16px 16px 18px;
+}
+
+.map-card-body h3 {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin: 0 0 6px;
+  font-size: 20px;
+}
+
+.map-card-body h3 span {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.map-card-body p {
+  margin: 0 0 14px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.map-here {
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  font-size: 12px;
+  font-weight: 700;
+  vertical-align: 3px;
+}
+
+.btn {
+  display: block;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+}
+
+.btn.primary {
+  border: none;
+  background: var(--accent);
+  color: #111;
+}
+
+/* Profil */
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #111;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.profile-name {
+  margin: 0;
+  font-size: 24px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.card input[type="password"] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 17px;
+}
+
+.auth-tabs {
+  margin-bottom: 4px;
+}
+
+.note {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.saved {
+  min-height: 20px;
+  margin: 10px 0 0;
+  color: #4ade80;
+  font-size: 14px;
+  text-align: center;
+}
+
+.saved.error {
+  color: var(--danger);
+}
+
+/* Úvod hry: kdo hraje a návrat na hlavní stránku */
+.home-who {
+  margin: 20px 0 0;
+}
+
+.home-who a {
+  color: var(--accent);
+}
+
+.home-back {
+  display: block;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 15px;
+  text-align: center;
+  text-decoration: none;
+}

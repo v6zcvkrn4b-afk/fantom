@@ -33,6 +33,15 @@
       white-space: nowrap;
     }
 
+    .map-back {
+      color: var(--text);
+      font-family: inherit !important;
+      font-size: 17px !important;
+      font-weight: 600;
+      letter-spacing: 0 !important;
+      text-decoration: none;
+    }
+
     #switch button.active {
       background: var(--accent);
       color: #111;
@@ -42,7 +51,7 @@
 <body>
   <div id="map"></div>
   <header id="topbar">
-    <span class="title">FANTOM · mapy</span>
+    <a href="mapy.html" class="title map-back">← Mapy</a>
     <span id="status"></span>
   </header>
   <div id="switch"></div>

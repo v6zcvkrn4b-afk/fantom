@@ -20,7 +20,8 @@ function randomCode() {
 }
 
 // mapId = null: zakladatel zatím nemá polohu, mapa se doplní později (setMap)
-export async function createGame(uid, name, mapId) {
+// times: oblíbené nastavení přihlášeného zakladatele, jinak výchozí
+export async function createGame(uid, name, mapId, times = TIMES) {
   for (let attempt = 0; attempt < 10; attempt++) {
     const code = randomCode();
     const existing = await get(gameRef(code, 'meta'));
@@ -29,7 +30,7 @@ export async function createGame(uid, name, mapId) {
       hostUid: uid,
       status: 'lobby',
       ...(mapId ? { mapId } : {}),
-      times: TIMES,
+      times,
       createdAt: serverTimestamp(),
     });
     await set(gameRef(code, `players/${uid}`), { name, joinedAt: serverTimestamp() });

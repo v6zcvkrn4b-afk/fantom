@@ -15,7 +15,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+export const auth = getAuth(app);
 export const db = getDatabase(app);
 
 // Rozdíl mezi hodinami telefonu a serveru, aby všichni počítali stejný čas
@@ -23,9 +23,11 @@ let serverOffset = 0;
 onValue(ref(db, '.info/serverTimeOffset'), (snap) => { serverOffset = snap.val() || 0; });
 export const serverNow = () => Date.now() + serverOffset;
 
-// Přihlásí hráče anonymně (vrací jeho id) a hlásí, jestli je spojení se serverem živé
+// Přihlásí hráče (vrací jeho id) a hlásí, jestli je spojení se serverem živé.
+// Kdo je přihlášený jménem a heslem, zůstane; ostatní hrají anonymně.
 export async function connect(onStatus) {
-  const cred = await signInAnonymously(auth);
-  onValue(ref(db, '.info/connected'), (snap) => onStatus(snap.val() === true));
-  return cred.user.uid;
+  await auth.authStateReady();
+  if (!auth.currentUser) await signInAnonymously(auth);
+  if (onStatus) onValue(ref(db, '.info/connected'), (snap) => onStatus(snap.val() === true));
+  return auth.currentUser.uid;
 }

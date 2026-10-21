@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="cs" class="page">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Fantom – mapy</title>
+  <meta name="theme-color" content="#0b0d1a">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="page-head">
+    <a href="./" class="back">← Fantom</a>
+    <span class="logo">Mapy</span>
+  </header>
+
+  <main class="page-main">
+    <p class="note">Mapa se ve hře vybere sama podle polohy toho, kdo hru zakládá. Hraje se jen uvnitř vyznačeného území.</p>
+    <div id="maps"></div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script type="module">
+    // Přehled všech herních map: náhled území, popis a odkaz na celou mapu
+    import { MAPS, areaKm2 } from './js/maps.js';
+    import { createMap } from './js/mapview.js';
+    import { permissionState, requestPosition } from './js/gps.js';
+    import { isInside } from './js/geo.js';
+
+    const list = document.getElementById('maps');
+    const titles = {};
+    for (const m of Object.values(MAPS)) {
+      const card = document.createElement('article');
+      card.className = 'map-card';
+      const mini = document.createElement('div');
+      mini.className = 'map-mini';
+      mini.id = `mini-${m.id}`;
+      const body = document.createElement('div');
+      body.className = 'map-card-body';
+      const h = document.createElement('h3');
+      const name = document.createElement('b');
+      name.textContent = m.name;
+      const size = document.createElement('span');
+      size.textContent = `asi ${areaKm2(m).toFixed(1).replace('.', ',')} km²`;
+      h.append(name, size);
+      const p = document.createElement('p');
+      p.textContent = m.about;
+      const open = document.createElement('a');
+      open.className = 'btn';
+      open.href = `mapa.html?mapa=${m.id}`;
+      open.textContent = 'Otevřít mapu';
+      body.append(h, p, open);
+      card.append(mini, body);
+      list.append(card);
+      titles[m.id] = name;
+
+      // Náhled: jen obrázek území, posouvat a přibližovat jde až v celé mapě
+      const { map } = createMap(mini.id, m);
+      for (const handler of ['dragging', 'touchZoom', 'doubleClickZoom', 'scrollWheelZoom', 'boxZoom', 'keyboard']) map[handler].disable();
+      if (map.tap) map.tap.disable();
+      mini.addEventListener('click', () => { window.location.href = open.href; });
+    }
+
+    // Kdo má polohu povolenou, uvidí u mapy „jsi tady“ (bez povolení se telefon neptá)
+    permissionState().then((s) => {
+      if (s !== 'granted') return;
+      requestPosition().then((fix) => {
+        const here = Object.values(MAPS).find((m) => isInside([fix.lat, fix.lng], m.boundary));
+        if (!here) return;
+        const badge = document.createElement('span');
+        badge.className = 'map-here';
+        badge.textContent = 'JSI TADY';
+        titles[here.id].append(badge);
+      }, () => {});
+    });
+  </script>
+</body>
+</html>

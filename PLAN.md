@@ -15,6 +15,7 @@
 5. ✅ Herní smyčka: náskok, pravidelná odhalení (výchozí každých 5 minut), odpočty
 6. ✅ Zobrazení na mapě: detektivové (poslední odhalení) a Fantom (poslední + předchozí)
 7. ✅ Konec hry: tlačítko „Byl jsem dopaden“, vypršení času, obrazovka s výsledkem
+7a. ✅ Úvodní stránka (Hrát / Mapy / Profil), dobrovolné přihlášení jménem a heslem, oblíbené nastavení hry v profilu
 8. ⬜ Odchod z území: zatím jen varování hráči, trest se ještě nerozhodl
 9. ⬜ Zkušební hra (zkrácené časy) a test v terénu v Šumperku
 

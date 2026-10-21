@@ -1,4 +1,4 @@
-import { PLAYERS, LIMITS } from './config.js';
+import { PLAYERS } from './config.js';
 import { pickArea, getArea, CZECHIA } from './maps.js';
 import {
   watchPosition, requestPosition, permissionState, GPS_MESSAGES,
@@ -8,9 +8,9 @@ import { startCompass, askCompass, currentHeading } from './heading.js';
 import { isInside } from './geo.js';
 import { createMap } from './mapview.js';
 import {
-  phaseAt, formatDuration, formatMinutes, normalizeTimes, VISIBILITY,
+  phaseAt, formatDuration, formatMinutes, normalizeTimes,
 } from './timing.js';
-import { createWheel } from './wheel.js';
+import { createSettings } from './settings.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -92,6 +92,7 @@ const ui = {
 const state = {
   area: startArea,
   api: null,            // modul game.js (načte se po připojení k serveru)
+  profile: null,        // přihlášený hráč { name, times }, nebo null (hraje anonymně)
   serverNow: Date.now,
   uid: null,
   code: null,
@@ -461,6 +462,23 @@ function showHome(error) {
   showStep('start', error);
 }
 
+// Pod úvodem: za koho hráč hraje (přihlášený / bez přihlášení)
+function renderWho() {
+  const el = $('home-who');
+  if (state.profile) {
+    el.textContent = 'Hraješ jako ';
+    const b = document.createElement('b');
+    b.textContent = state.profile.name;
+    el.append(b);
+  } else {
+    el.textContent = 'Hraješ bez přihlášení · ';
+    const a = document.createElement('a');
+    a.href = 'profil.html';
+    a.textContent = 'Přihlásit se';
+    el.append(a);
+  }
+}
+
 function homeError(message) {
   $('home-error').textContent = message;
   $('home-error').hidden = false;
@@ -485,10 +503,25 @@ async function busy(button, fn) {
   }
 }
 
+// Přihlášený hráč přezdívku nepíše – je to jeho uživatelské jméno
 $('go-create').addEventListener('click', () => {
   home.mode = 'create';
-  showStep('name');
+  busy($('go-create'), async () => {
+    if (state.profile) await createAs(state.profile.name);
+    else showStep('name');
+  });
 });
+
+async function createAs(name) {
+  // Bez známé polohy (na mapě je celé Česko) se mapa doplní, až zakladatel polohu povolí
+  const mapId = state.area === CZECHIA ? null : state.area.id;
+  openGame(await state.api.createGame(state.uid, name, mapId, state.profile?.times));
+}
+
+async function joinAs(name) {
+  await state.api.joinGame(home.code, state.uid, name);
+  openGame(home.code);
+}
 
 $('go-join').addEventListener('click', () => {
   home.mode = 'join';
@@ -506,6 +539,7 @@ $('code-next').addEventListener('click', () => {
     const alreadyIn = await state.api.checkJoinable(code, state.uid);
     home.code = code;
     if (alreadyIn) openGame(code);
+    else if (state.profile) await joinAs(state.profile.name);
     else showStep('name');
   });
 });
@@ -518,14 +552,8 @@ $('name-next').addEventListener('click', () => {
   }
   busy($('name-next'), async () => {
     store.set('name', name);
-    if (home.mode === 'create') {
-      // Bez známé polohy (na mapě je celé Česko) se mapa doplní, až zakladatel polohu povolí
-      const mapId = state.area === CZECHIA ? null : state.area.id;
-      openGame(await state.api.createGame(state.uid, name, mapId));
-    } else {
-      await state.api.joinGame(home.code, state.uid, name);
-      openGame(home.code);
-    }
+    if (home.mode === 'create') await createAs(name);
+    else await joinAs(name);
   });
 });
 
@@ -695,7 +723,7 @@ function renderLobby() {
   if (!settingsUi || settingsUi.code !== state.code || settingsUi.readOnly !== !isHost) {
     settingsUi = buildSettings(!isHost);
   }
-  settingsUi.update(t);
+  settingsUi.update(t, meta.mapId ? getArea(meta.mapId).name : null);
   $('settings').hidden = false;
   // Hru nejde spustit, dokud všichni nemají polohu
   const noGps = players.filter(([uid, p]) => (uid === state.uid ? !gpsReady() : p.gps !== true)).map(([, p]) => p.name);
@@ -720,168 +748,21 @@ function renderLobby() {
 }
 
 // ---------- Nastavení hry (v čekárně) ----------
-// Vytvoří se jednou pro hru; při změnách z databáze se jen aktualizují hodnoty,
-// aby se válečky nepřekreslovaly pod prstem. Ostatní hráči ho vidí jen pro čtení.
+// Vytvoří se jednou pro hru (viz settings.js); ostatní hráči ho vidí jen pro čtení.
 let settingsUi = null;
 
 function buildSettings(readOnly) {
-  const box = $('settings');
-  box.replaceChildren();
-  box.classList.toggle('readonly', readOnly);
-  const title = document.createElement('div');
-  title.className = 'set-title';
-  title.textContent = readOnly ? 'Nastavení hry (určuje zakladatel ★)' : 'Nastavení hry';
-  box.append(title);
-  // Mapa je jen pro informaci – vybírá se podle polohy zakladatele při založení hry
-  const mapRow = document.createElement('div');
-  mapRow.className = 'set-row static';
-  const mapLabel = document.createElement('span');
-  mapLabel.textContent = 'Mapa';
-  const mapValue = document.createElement('strong');
-  mapRow.append(mapLabel, mapValue);
-  box.append(mapRow);
-  const rows = {};
-  const t0 = normalizeTimes(state.game.meta.times);
-
   // Ukládá se vždy celé nastavení, aby prošla kontrola v pravidlech databáze
   const save = (changes) => (state.api ? state.api.updateTimes : () => Promise.resolve())(state.code, { ...normalizeTimes(state.game.meta.times), ...changes })
     .catch((err) => dialog({ title: 'Nastavení se nepodařilo uložit', text: errorText(err) }));
-
-  function addPicker(key, label, wheelDefs, help) {
-    const item = document.createElement('div');
-    const row = document.createElement('button');
-    row.type = 'button';
-    row.className = 'set-row';
-    const name = document.createElement('span');
-    name.textContent = label;
-    const value = document.createElement('strong');
-    row.append(name, value);
-    item.append(row);
-    // Otazník s krátkým vysvětlením (otevře/zavře text pod řádkem, nerozbaluje váleček)
-    if (help) {
-      const q = document.createElement('span');
-      q.className = 'help';
-      q.setAttribute('role', 'button');
-      q.setAttribute('aria-label', 'Vysvětlení');
-      q.textContent = '?';
-      const text = document.createElement('p');
-      text.className = 'help-text';
-      text.textContent = help;
-      text.hidden = true;
-      q.addEventListener('click', (e) => {
-        e.stopPropagation();
-        text.hidden = !text.hidden;
-      });
-      name.append(q);
-      item.append(text);
-    }
-    const picker = document.createElement('div');
-    picker.className = 'set-picker';
-    picker.hidden = true;
-    const wheels = wheelDefs.map((def) => {
-      const w = createWheel(def);
-      picker.append(w.el);
-      return w;
-    });
-    // Ťuknutím se váleček rozbalí, ostatní se sbalí (jako v Nastavení na iPhonu)
-    row.addEventListener('click', () => {
-      if (readOnly) return;
-      const open = picker.hidden;
-      for (const r of Object.values(rows)) {
-        r.picker.hidden = true;
-        r.row.classList.remove('open');
-      }
-      if (open) {
-        picker.hidden = false;
-        row.classList.add('open');
-        wheels.forEach((w) => w.sync());
-      }
-    });
-    item.append(picker);
-    box.append(item);
-    rows[key] = { item, row, value, picker, wheels };
-  }
-
-  function saveChase() {
-    const [h, m] = rows.chase.wheels;
-    save({ chaseMin: Math.max(1, h.value * 60 + m.value) });
-  }
-
-  const every = LIMITS.everyMin;
-  addPicker('chase', 'Délka hry', [
-    { min: LIMITS.chaseHours[0], max: LIMITS.chaseHours[1], value: Math.floor(t0.chaseMin / 60), unit: 'h', onChange: saveChase },
-    { min: 0, max: 59, value: t0.chaseMin % 60, unit: 'min', onChange: saveChase },
-  ]);
-  addPicker('headStart', 'Náskok Fantoma', [
-    { min: LIMITS.headStartMin[0], max: LIMITS.headStartMin[1], value: t0.headStartMin, unit: 'min', onChange: (v) => save({ headStartMin: v }) },
-  ], 'Čas na začátku hry, kdy Fantom utíká a schovává se. Detektivové zatím čekají a ničí poloha se ještě neukazuje. Délka hry se začne odpočítávat až po skončení náskoku.');
-  addPicker('phantomEvery', 'Fantom se ukazuje každých', [
-    { min: every[0], max: every[1], value: t0.phantomEveryMin, unit: 'min', onChange: (v) => save({ phantomEveryMin: v }) },
-  ]);
-
-  const visItem = document.createElement('div');
-  const visLabel = document.createElement('div');
-  visLabel.className = 'set-label';
-  visLabel.textContent = 'Komu se ukazují detektivové';
-  const seg = document.createElement('div');
-  seg.className = 'segmented';
-  const visButtons = {};
-  for (const [key, text] of Object.entries(VISIBILITY)) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = text;
-    b.addEventListener('click', () => save({ detectiveVisibility: key }));
-    seg.append(b);
-    visButtons[key] = b;
-  }
-  visItem.append(visLabel, seg);
-  box.append(visItem);
-
-  addPicker('detEvery', 'Detektivové se ukazují každých', [
-    { min: every[0], max: every[1], value: t0.detectiveEveryMin, unit: 'min', onChange: (v) => save({ detectiveEveryMin: v }) },
-  ]);
-
-  const namesItem = document.createElement('div');
-  const namesLabel = document.createElement('div');
-  namesLabel.className = 'set-label';
-  namesLabel.textContent = 'Jména detektivů na mapě';
-  const namesSeg = document.createElement('div');
-  namesSeg.className = 'segmented';
-  const nameButtons = {};
-  for (const [key, text] of [['show', 'Zobrazit jména'], ['hide', 'Anonymně']]) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = text;
-    b.addEventListener('click', () => save({ showDetectiveNames: key === 'show' }));
-    namesSeg.append(b);
-    nameButtons[key] = b;
-  }
-  namesItem.append(namesLabel, namesSeg);
-  box.append(namesItem);
-
-  const setWheel = (w, v) => { if (w.value !== v) w.set(v); };
-
-  return {
-    code: state.code,
+  const editor = createSettings($('settings'), {
     readOnly,
-    update(t) {
-      mapValue.textContent = state.game.meta.mapId ? getArea(state.game.meta.mapId).name : '–';
-      rows.headStart.value.textContent = formatMinutes(t.headStartMin);
-      rows.chase.value.textContent = formatMinutes(t.chaseMin);
-      rows.phantomEvery.value.textContent = `${t.phantomEveryMin} min`;
-      rows.detEvery.value.textContent = `${t.detectiveEveryMin} min`;
-      setWheel(rows.headStart.wheels[0], t.headStartMin);
-      setWheel(rows.chase.wheels[0], Math.floor(t.chaseMin / 60));
-      setWheel(rows.chase.wheels[1], t.chaseMin % 60);
-      setWheel(rows.phantomEvery.wheels[0], t.phantomEveryMin);
-      setWheel(rows.detEvery.wheels[0], t.detectiveEveryMin);
-      rows.detEvery.item.hidden = t.detectiveVisibility === 'none';
-      namesItem.hidden = t.detectiveVisibility === 'none';
-      for (const [key, b] of Object.entries(visButtons)) b.classList.toggle('active', key === t.detectiveVisibility);
-      nameButtons.show.classList.toggle('active', t.showDetectiveNames);
-      nameButtons.hide.classList.toggle('active', !t.showDetectiveNames);
-    },
-  };
+    title: readOnly ? 'Nastavení hry (určuje zakladatel ★)' : 'Nastavení hry',
+    times: normalizeTimes(state.game.meta.times),
+    save,
+    showMap: true,
+  });
+  return { ...editor, code: state.code, readOnly };
 }
 
 $('start').addEventListener('click', async () => {
@@ -1183,8 +1064,11 @@ if (store.get('code') && cached?.code === store.get('code') && cached.game?.play
     // state.api se nastaví až po přihlášení – dřív by server zápisy i čtení odmítl.
     const fb = await import('./firebase.js');
     const api = await import('./game.js');
+    const account = await import('./account.js');
     state.serverNow = fb.serverNow;
     state.uid = await fb.connect(setOnline);
+    state.profile = await account.loadProfile().catch(() => null);
+    renderWho();
     state.api = api;
     apiReadyResolve();
   } catch (err) {
