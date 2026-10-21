@@ -86,6 +86,7 @@ function onFix(fix) {
   view.showMe(fix, isPhantom());
   updateGpsStatus();
   reportGps();
+  fillMissingMap();
   tick();
 }
 
@@ -428,9 +429,8 @@ $('name-next').addEventListener('click', () => {
   busy($('name-next'), async () => {
     store.set('name', name);
     if (home.mode === 'create') {
-      // Bez známé polohy (na mapě je celé Česko) se použije naposledy hraná mapa
-      const mapId = state.area === CZECHIA ? getArea(store.get('map')).id : state.area.id;
-      store.set('map', mapId);
+      // Bez známé polohy (na mapě je celé Česko) se mapa doplní, až zakladatel polohu povolí
+      const mapId = state.area === CZECHIA ? null : state.area.id;
       openGame(await state.api.createGame(state.uid, name, mapId));
     } else {
       await state.api.joinGame(home.code, state.uid, name);
@@ -481,10 +481,24 @@ function openGame(code) {
     state.game = game;
     state.rev++;
     ui.set('gameCache', JSON.stringify({ code, uid: state.uid, game }));
-    setArea(getArea(game.meta.mapId));
+    setArea(gameArea(game));
     render();
     if (first && game.meta.status === 'lobby') restoreModal();
   });
+}
+
+// Mapa hry; dokud ji zakladatel bez polohy neurčil, je vidět celé Česko
+const gameArea = (game) => (game.meta.mapId ? getArea(game.meta.mapId) : CZECHIA);
+
+// Hra založená bez polohy: mapu určí poloha zakladatele, jakmile ji povolí
+let mapSetting = false;
+function fillMissingMap() {
+  const meta = state.game?.meta;
+  if (!meta || meta.mapId || meta.status !== 'lobby' || meta.hostUid !== state.uid) return;
+  if (!state.fix || !state.api || mapSetting) return;
+  mapSetting = true;
+  const id = (forcedMap ? getArea(forcedMap) : pickArea(state.fix.lat, state.fix.lng)).id;
+  state.api.setMap(state.code, id).finally(() => { mapSetting = false; });
 }
 
 function closeGame() {
@@ -606,7 +620,8 @@ function renderLobby() {
   $('lobby-times').classList.toggle('blocking', Boolean(noGps.length || !phantomChosen || detectives < 1));
 
   $('start').hidden = !isHost;
-  $('start').disabled = !(phantomChosen && detectives >= 1 && noGps.length === 0);
+  $('start').disabled = !(phantomChosen && detectives >= 1 && noGps.length === 0 && meta.mapId);
+  fillMissingMap();
   reportGps();
   renderGpsBox();
   $('lobby-wait').hidden = isHost;
@@ -758,7 +773,7 @@ function buildSettings(readOnly) {
     code: state.code,
     readOnly,
     update(t) {
-      mapValue.textContent = getArea(state.game.meta.mapId).name;
+      mapValue.textContent = state.game.meta.mapId ? getArea(state.game.meta.mapId).name : '–';
       rows.headStart.value.textContent = formatMinutes(t.headStartMin);
       rows.chase.value.textContent = formatMinutes(t.chaseMin);
       rows.phantomEvery.value.textContent = `${t.phantomEveryMin} min`;
@@ -1043,7 +1058,7 @@ let cached = null;
 try { cached = JSON.parse(ui.get('gameCache') || 'null'); } catch { cached = null; }
 if (store.get('code') && cached?.code === store.get('code') && cached.game?.players?.[cached.uid]) {
   Object.assign(state, { code: cached.code, uid: cached.uid, game: cached.game, reviewing: ui.get('reviewing') === cached.code });
-  setArea(getArea(cached.game.meta.mapId));
+  setArea(gameArea(cached.game));
   render();
   if (cached.game.meta.status === 'lobby') restoreModal();
 } else if (store.get('code')) {

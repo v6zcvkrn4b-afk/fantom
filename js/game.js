@@ -19,6 +19,7 @@ function randomCode() {
   return String(Math.floor(1000 + Math.random() * 9000));
 }
 
+// mapId = null: zakladatel zatím nemá polohu, mapa se doplní později (setMap)
 export async function createGame(uid, name, mapId) {
   for (let attempt = 0; attempt < 10; attempt++) {
     const code = randomCode();
@@ -27,7 +28,7 @@ export async function createGame(uid, name, mapId) {
     await set(gameRef(code, 'meta'), {
       hostUid: uid,
       status: 'lobby',
-      mapId,
+      ...(mapId ? { mapId } : {}),
       times: TIMES,
       createdAt: serverTimestamp(),
     });
@@ -79,6 +80,10 @@ export function watchGame(code, callback) {
 // V čekárně: má hráč povolenou a funkční polohu?
 export function setGpsReady(code, uid, ok) {
   return update(gameRef(code, `players/${uid}`), { gps: ok });
+}
+
+export function setMap(code, mapId) {
+  return update(gameRef(code, 'meta'), { mapId });
 }
 
 // uid = null zruší výběr Fantoma

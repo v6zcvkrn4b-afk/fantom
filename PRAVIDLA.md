@@ -8,7 +8,7 @@ Městská hra v reálných ulicích pro libovolný počet hráčů (doporučeno 
 
 - **Štramberk:** celé město včetně Trúby, náměstí, jeskyně Šipka, Bílé hory a Kamenárky, asi 2,2 km². Aktivní vápencový lom Kotouč je mimo území.
 
-Mapa se vybere automaticky podle polohy toho, kdo hru zakládá (mapa, ve které je, jinak nejbližší). Připojení hráči hrají na mapě dané hry. V nastavení hry je mapa uvedená jen pro informaci. Mapu jde vynutit v adrese, např. `…/fantom/?mapa=brno` nebo `?mapa=sumperk`.
+Mapa se vybere automaticky podle polohy toho, kdo hru zakládá (mapa, ve které je, jinak nejbližší). Dokud zakladatel nemá povolenou polohu, je u mapy „–“ a hru nejde spustit. Připojení hráči hrají na mapě dané hry. V nastavení hry je mapa uvedená jen pro informaci. Mapu jde vynutit v adrese, např. `…/fantom/?mapa=brno` nebo `?mapa=sumperk`.
 
 ## Role
 - **Fantom** (1 hráč) utíká a skrývá se.
