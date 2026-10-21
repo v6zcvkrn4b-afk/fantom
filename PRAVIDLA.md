@@ -15,7 +15,7 @@ Mapa se vybere automaticky podle polohy toho, kdo hru zakládá (mapa, ve které
 - **Detektivové** (kolik hráčů se připojí) ho hledají a snaží se ho dopadnout. Připojit se dá jen v čekárně; po spuštění hry už ne.
 
 ## Průběh
-1. Jeden hráč dá **Založit novou hru**, napíše přezdívku a dostane 4místný kód. Ostatní dají **Připojit se ke hře**, zadají kód a pak přezdívku. Bez registrace. V čekárně všichni vidí hráče i nastavení hry; zakladatel nastavení upraví, kliknutím vybere Fantoma a hru spustí.
+1. Jeden hráč dá **Založit novou hru**, napíše přezdívku a dostane 4místný kód. Ostatní dají **Připojit se ke hře**, zadají kód a pak přezdívku. Bez registrace. V čekárně všichni vidí hráče i nastavení hry; zakladatel nastavení upraví, kliknutím vybere Fantoma (dalším kliknutím na Fantoma výběr zruší) a hru spustí.
 2. **Náskok 5 minut:** Fantom utíká a detektivové čekají. Ničí poloha se zatím nezobrazuje.
 3. **Honička 45 minut** (podle nastavení): Fantom i detektivové se pravidelně **odhalují**, každá skupina podle svého intervalu (výchozí každých 5 minut, poprvé hned po skončení náskoku):
    - detektivové uvidí přesný bod, kde byl Fantom v okamžiku odhalení,

@@ -67,6 +67,7 @@ export function setGpsReady(code, uid, ok) {
   return update(gameRef(code, `players/${uid}`), { gps: ok });
 }
 
+// uid = null zruší výběr Fantoma
 export function setPhantom(code, uid) {
   return update(gameRef(code, 'meta'), { phantomUid: uid });
 }

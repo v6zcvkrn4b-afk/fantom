@@ -534,7 +534,7 @@ function renderLobby() {
 
   $('lobby-code').textContent = state.code;
   $('lobby-hint').textContent = isHost
-    ? 'Klikni na hráče, který bude Fantom. Ostatní budou detektivové.'
+    ? 'Klikni na hráče, který bude Fantom (dalším kliknutím výběr zrušíš). Ostatní budou detektivové.'
     : 'Fantoma vybírá zakladatel hry (★).';
 
   const list = $('lobby-players');
@@ -569,7 +569,8 @@ function renderLobby() {
     li.classList.toggle('is-phantom', phantom);
     if (isHost) {
       li.classList.add('pickable');
-      li.addEventListener('click', () => state.api?.setPhantom(state.code, uid));
+      // Klik na hráče = Fantom; klik na současného Fantoma ho vrátí mezi detektivy
+      li.addEventListener('click', () => state.api?.setPhantom(state.code, phantom ? null : uid));
     }
     if (uid === state.uid) li.append(gpsBox);
     list.append(li);
