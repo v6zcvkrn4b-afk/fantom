@@ -1,5 +1,5 @@
 import { PLAYERS, LIMITS } from './config.js';
-import { pickArea, getArea } from './maps.js';
+import { pickArea, getArea, CZECHIA } from './maps.js';
 import {
   watchPosition, requestPosition, permissionState, GPS_MESSAGES,
 } from './gps.js';
@@ -30,7 +30,8 @@ const store = {
 // ve hře podle toho, na jaké mapě byla hra založena.
 // Mapu jde vynutit v adrese, např. …/fantom/?mapa=brno (na prohlédnutí jiného města)
 const forcedMap = new URLSearchParams(window.location.search).get('mapa');
-const startArea = getArea(forcedMap || store.get('map'));
+// Úvod bez známé polohy ukazuje celé Česko; konkrétní město až podle polohy
+const startArea = forcedMap ? getArea(forcedMap) : CZECHIA;
 const view = createMap('map', startArea);
 
 // Co je právě otevřené (krok úvodu, návod…), aby se po obnovení stránky ukázalo totéž.
@@ -266,7 +267,7 @@ function autoArea() {
 const GENERIC_TAGLINE = 'Dopadněte Fantoma v ulicích vašeho města.';
 
 function setArea(area) {
-  const known = Boolean(state.fix || forcedMap);
+  const known = area !== CZECHIA && Boolean(state.fix || forcedMap || state.game);
   const key = known ? area.id : 'generic';
   if (state.area === area && $('tagline').dataset.map === key) return;
   state.area = area;
@@ -427,8 +428,10 @@ $('name-next').addEventListener('click', () => {
   busy($('name-next'), async () => {
     store.set('name', name);
     if (home.mode === 'create') {
-      store.set('map', state.area.id);
-      openGame(await state.api.createGame(state.uid, name, state.area.id));
+      // Bez známé polohy (na mapě je celé Česko) se použije naposledy hraná mapa
+      const mapId = state.area === CZECHIA ? getArea(store.get('map')).id : state.area.id;
+      store.set('map', mapId);
+      openGame(await state.api.createGame(state.uid, name, mapId));
     } else {
       await state.api.joinGame(home.code, state.uid, name);
       openGame(home.code);
