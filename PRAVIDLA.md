@@ -29,6 +29,8 @@ Mapa se vybere automaticky podle polohy toho, kdo hru zakládá (mapa, ve které
 - **Hranice herního území:** vyznačená na mapě.
 - **Odpočet do dalšího odhalení a do konce hry.**
 
+Když zakladatel opustí čekárnu, roli zakladatele dostane hráč, který se připojil nejdřív. Byl-li odcházející zakladatel vybraný jako Fantom, výběr Fantoma se zruší.
+
 ## Poloha v čekárně
 - Telefon se na polohu sám nezeptá. Hráč, který ji ještě nepovolil, má u svého jména v čekárně tlačítko **Povolit polohu** – teprve po kliknutí se ukáže dotaz telefonu. Kdo polohu povolil už dřív, nemusí dělat nic.
 - U každého hráče v čekárně je puntík: 🟢 poloha povolená a funkční, 🔴 poloha chybí.

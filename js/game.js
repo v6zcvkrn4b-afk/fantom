@@ -53,7 +53,21 @@ export async function joinGame(code, uid, name) {
   await set(gameRef(code, `players/${uid}`), { name, joinedAt: serverTimestamp() });
 }
 
+// Odchod z čekárny. Odchází-li zakladatel, předá roli tomu, kdo se připojil nejdřív
+// (musí to udělat dřív, než ze hry zmizí – jen zakladatel smí měnit údaje hry).
 export async function leaveGame(code, uid) {
+  const snap = await get(gameRef(code));
+  const game = snap.val();
+  if (game?.meta?.hostUid === uid && game.meta.status === 'lobby') {
+    const next = Object.entries(game.players || {})
+      .filter(([id]) => id !== uid)
+      .sort((a, b) => (a[1].joinedAt || 0) - (b[1].joinedAt || 0))[0];
+    if (next) {
+      const changes = { hostUid: next[0] };
+      if (game.meta.phantomUid === uid) changes.phantomUid = null;
+      await update(gameRef(code, 'meta'), changes);
+    }
+  }
   await remove(gameRef(code, `players/${uid}`));
 }
 
