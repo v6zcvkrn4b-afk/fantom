@@ -76,6 +76,7 @@ html, body {
 #status {
   color: var(--muted);
   text-align: right;
+  cursor: pointer;
 }
 
 #status.error {
@@ -344,6 +345,7 @@ html, body {
 
 #lobby-players li {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
@@ -615,12 +617,6 @@ html, body {
   margin: 0 0 8px;
 }
 
-
-#status {
-  cursor: pointer;
-}
-
-
 #gps-box .gps-title {
   font-weight: 600;
 }
@@ -650,11 +646,7 @@ html, body {
   margin-bottom: 10px;
 }
 
-
 /* Tlačítko Povolit polohu u vlastního jména v čekárně */
-#lobby-players li {
-  flex-wrap: wrap;
-}
 
 /* Na vlastní řádek pod jménem (vedle jména se na telefon nevejde) */
 #lobby-players .gps-allow {

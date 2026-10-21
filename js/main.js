@@ -15,7 +15,7 @@ const $ = (id) => document.getElementById(id);
 
 // ---------- Hra otevřená uvnitř jiné aplikace ----------
 // Vestavěné prohlížeče Messengeru, Instagramu, WhatsAppu… nepustí polohu. Takový hráč
-// se dál nedostane – dostane jen tlačítko pro otevření v běžném prohlížeči.
+// se dál nedostane – dostane jen návod (a na Androidu tlačítko), jak hru otevřít v prohlížeči.
 const UA = navigator.userAgent;
 const IN_APP = /FBAN|FBAV|FB_IAB|FBIOS|Messenger|Instagram|WhatsApp|Snapchat|musical_ly|BytedanceWebview|Line\/|; wv\)/i.test(UA);
 if (IN_APP) {
@@ -56,8 +56,7 @@ const store = {
   },
 };
 
-// Mapa: před hrou podle polohy hráče (naposledy použitá, než se poloha zjistí),
-// ve hře podle toho, na jaké mapě byla hra založena.
+// Mapa: před hrou podle polohy hráče, ve hře podle toho, na jaké mapě byla hra založena.
 // Mapu jde vynutit v adrese, např. …/fantom/?mapa=brno (na prohlédnutí jiného města)
 const forcedMap = new URLSearchParams(window.location.search).get('mapa');
 // Úvod bez známé polohy ukazuje celé Česko; konkrétní město až podle polohy
@@ -240,7 +239,7 @@ function restoreModal() {
   else if (m === 'ios' || m === 'android') showGpsGuide(m);
 }
 
-// Ťuknutí na stav polohy nahoře zkusí polohu získat znovu (prohlížeč případně ukáže dotaz)
+// Kliknutí na stav polohy nahoře zkusí polohu získat znovu (prohlížeč případně ukáže dotaz)
 $('status').addEventListener('click', () => {
   if (!gpsOk()) requestPosition().then((f) => { onFix(f); startGps(); }, onGpsError);
 });
@@ -284,7 +283,6 @@ setInterval(() => {
   reportGps();
   if (state.game?.meta?.status === 'lobby') renderGpsBox();
 }, 5000);
-
 
 function autoArea() {
   if (forcedMap) return getArea(forcedMap);

@@ -24,7 +24,7 @@ export function normalizeTimes(t = {}) {
 }
 
 // Časy odhalení (ms) od začátku honičky po konec hry
-export function schedule(chaseStart, endAt, everyMin) {
+function schedule(chaseStart, endAt, everyMin) {
   const out = [];
   for (let t = chaseStart; t < endAt; t += everyMin * MIN) out.push(t);
   return out;

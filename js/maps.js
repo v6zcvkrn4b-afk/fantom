@@ -421,7 +421,7 @@ export const MAPS = {
   },
 };
 
-export const DEFAULT_MAP = 'sumperk';
+const DEFAULT_MAP = 'sumperk';
 
 // Celé Česko – na úvodní obrazovce, dokud není známá poloha hráče (není to herní mapa).
 // Zjednodušená státní hranice z OpenStreetMap.
