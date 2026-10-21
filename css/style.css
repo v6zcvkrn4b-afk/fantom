@@ -636,6 +636,46 @@ html, body {
   font-size: 22px;
 }
 
+/* Potvrzovací okno: nad vším ostatním včetně návodu k poloze */
+.screen.dialog {
+  z-index: 3100;
+}
+
+.dialog p {
+  margin: 0 0 8px;
+  line-height: 1.45;
+}
+
+.card button.danger {
+  border: none;
+  background: var(--danger);
+  color: #fff;
+}
+
+/* Odkaz ke zkopírování ručně (když schránka nefunguje) */
+.inapp-link {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+}
+
+/* Kužel u vlastní polohy: kam je hráč otočený */
+.heading {
+  width: 100px;
+  height: 100px;
+  pointer-events: none;
+}
+
+.heading svg {
+  display: block;
+}
+
 #gps-steps {
   margin: 8px 0;
   padding-left: 20px;

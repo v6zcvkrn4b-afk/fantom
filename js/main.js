@@ -4,6 +4,7 @@ import {
   watchPosition, requestPosition, permissionState, GPS_MESSAGES,
 } from './gps.js';
 import { keepScreenOn } from './wakelock.js';
+import { startCompass, askCompass, currentHeading } from './heading.js';
 import { isInside } from './geo.js';
 import { createMap } from './mapview.js';
 import {
@@ -38,7 +39,18 @@ if (IN_APP) {
       await navigator.clipboard.writeText(url);
       $('inapp-copy').textContent = 'Odkaz zkopírován – vlož ho do prohlížeče';
     } catch {
-      window.prompt('Zkopíruj odkaz a vlož ho do prohlížeče:', url);
+      // Schránka nefunguje: ukázat odkaz označený, ať ho jde zkopírovat ručně
+      let field = document.querySelector('.inapp-link');
+      if (!field) {
+        field = document.createElement('input');
+        field.className = 'inapp-link';
+        field.readOnly = true;
+        field.value = url;
+        $('inapp-copy').after(field);
+      }
+      $('inapp-copy').textContent = 'Podrž prst na odkazu a zkopíruj ho';
+      field.focus();
+      field.select();
     }
   });
 }
@@ -113,6 +125,7 @@ function onFix(fix) {
   state.gpsError = null;
   if (!state.game) setArea(autoArea());
   view.showMe(fix, isPhantom());
+  updateHeading();
   updateGpsStatus();
   reportGps();
   fillMissingMap();
@@ -168,6 +181,7 @@ permissionState().then((s) => {
 // Kliknutí na „Povolit polohu“ u vlastního jména v čekárně
 function askGps(button) {
   state.gpsAsked = true;
+  askCompass();
   if (button) {
     button.disabled = true;
     button.textContent = 'Zjišťuji…';
@@ -241,6 +255,7 @@ function restoreModal() {
 
 // Kliknutí na stav polohy nahoře zkusí polohu získat znovu (prohlížeč případně ukáže dotaz)
 $('status').addEventListener('click', () => {
+  askCompass();
   if (!gpsOk()) requestPosition().then((f) => { onFix(f); startGps(); }, onGpsError);
 });
 
@@ -313,7 +328,24 @@ function updateGpsStatus() {
   $('warn').hidden = !outside;
 }
 
-$('locate').addEventListener('click', () => view.centerOnMe());
+// Ťuknutí na ◎ zároveň zapne kompas (na iPhonu se telefon zeptá na „pohyb a orientaci“)
+$('locate').addEventListener('click', () => {
+  askCompass();
+  view.centerOnMe();
+});
+
+// Kužel směru u vlastní polohy; kompas posílá desítky změn za sekundu, kreslí se jednou za snímek
+let headingFrame = 0;
+function updateHeading() {
+  if (headingFrame) return;
+  headingFrame = requestAnimationFrame(() => {
+    headingFrame = 0;
+    view.showHeading(currentHeading(state.fix));
+  });
+}
+startCompass(updateHeading);
+// Zastaralý směr (hráč se zastavil, kompas zmlkl) schovat
+setInterval(updateHeading, 1000);
 keepScreenOn();
 
 // Na výšku: kde to prohlížeč dovolí (Android, aplikace z plochy), orientaci zamkneme.
@@ -359,6 +391,39 @@ function notify() {
   beep();
   if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
 }
+
+// ---------- Potvrzovací okna ----------
+// Místo window.confirm/alert: systémová okna na iPhonu ukazují adresu webu a vypadají jako chyba.
+// Vrací Promise<boolean> (true = hráč potvrdil). `during` = stav hry, ve kterém má okno smysl –
+// když se hra mezitím změní (např. skončí), okno se samo zavře.
+let dialogDone = null;
+let dialogDuring = null;
+
+function dialog({ title, text = '', ok = 'OK', cancel = null, danger = false, during = null }) {
+  if (dialogDone) dialogDone(false);
+  $('dialog-title').textContent = title;
+  $('dialog-text').textContent = text;
+  $('dialog-text').hidden = !text;
+  $('dialog-ok').textContent = ok;
+  $('dialog-ok').classList.toggle('primary', !danger);
+  $('dialog-ok').classList.toggle('danger', danger);
+  $('dialog-cancel').textContent = cancel || '';
+  $('dialog-cancel').hidden = !cancel;
+  $('dialog').hidden = false;
+  dialogDuring = during;
+  return new Promise((resolve) => {
+    dialogDone = (answer) => {
+      dialogDone = null;
+      dialogDuring = null;
+      $('dialog').hidden = true;
+      resolve(answer);
+    };
+  });
+}
+$('dialog-ok').addEventListener('click', () => dialogDone?.(true));
+$('dialog-cancel').addEventListener('click', () => dialogDone?.(false));
+
+const errorText = (err) => `Zkontroluj internet a zkus to znovu. (${err?.code || err?.message || err})`;
 
 // ---------- Obrazovky ----------
 function showScreen(name) {
@@ -527,6 +592,7 @@ function fillMissingMap() {
 }
 
 function closeGame() {
+  dialogDone?.(false);
   ui.set('gameCache', null);
   ui.set('reviewing', null);
   ui.set('modal', null);
@@ -542,6 +608,7 @@ function render() {
   const { meta } = state.game;
   // Návod k poloze patří jen do čekárny (hra mohla mezitím začít)
   if (meta.status !== 'lobby' && !$('gps-modal').hidden) closeGpsModal();
+  if (dialogDuring && dialogDuring !== meta.status) dialogDone?.(false);
   if (state.fix) view.showMe(state.fix, isPhantom());
   updateGpsStatus();
 
@@ -678,7 +745,7 @@ function buildSettings(readOnly) {
 
   // Ukládá se vždy celé nastavení, aby prošla kontrola v pravidlech databáze
   const save = (changes) => (state.api ? state.api.updateTimes : () => Promise.resolve())(state.code, { ...normalizeTimes(state.game.meta.times), ...changes })
-    .catch((err) => window.alert(`Nastavení se nepodařilo uložit (${err.code || err.message}).`));
+    .catch((err) => dialog({ title: 'Nastavení se nepodařilo uložit', text: errorText(err) }));
 
   function addPicker(key, label, wheelDefs, help) {
     const item = document.createElement('div');
@@ -818,12 +885,20 @@ function buildSettings(readOnly) {
 }
 
 $('start').addEventListener('click', async () => {
-  if (!state.api || !window.confirm('Spustit hru? Fantom začne utíkat a běží čas.')) return;
+  if (!state.api) return;
+  const go = await dialog({
+    title: 'Spustit hru?',
+    text: 'Fantom začne utíkat a poběží čas. Po spuštění se už nikdo další nepřipojí.',
+    ok: 'Spustit',
+    cancel: 'Zpět',
+    during: 'lobby',
+  });
+  if (!go) return;
   $('start').disabled = true;
   try {
     await state.api.startGame(state.code);
   } catch (err) {
-    window.alert(`Hru se nepodařilo spustit (${err.code || err.message}).`);
+    dialog({ title: 'Hru se nepodařilo spustit', text: errorText(err) });
     $('start').disabled = false;
   }
 });
@@ -1038,11 +1113,20 @@ function renderResult() {
 }
 
 $('caught').addEventListener('click', async () => {
-  if (!state.api || !window.confirm('Opravdu tě detektiv chytil? Hra tím pro všechny skončí.')) return;
+  if (!state.api) return;
+  const sure = await dialog({
+    title: 'Chytil tě detektiv?',
+    text: 'Hra tím pro všechny skončí a vyhrají detektivové.',
+    ok: 'Ano, byl jsem dopaden',
+    cancel: 'Ne, hraju dál',
+    danger: true,
+    during: 'running',
+  });
+  if (!sure) return;
   try {
     await state.api.reportCaught(state.code);
   } catch (err) {
-    window.alert(`Nepodařilo se odeslat (${err.code || err.message}). Zkus to znovu.`);
+    dialog({ title: 'Nepodařilo se odeslat', text: errorText(err), during: 'running' });
   }
 });
 

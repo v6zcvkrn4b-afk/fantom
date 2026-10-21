@@ -27,6 +27,7 @@ js/config.js          výchozí nastavení hry (časy, počty hráčů)
 js/maps.js            herní mapy (Šumperk, Brno, Štramberk) a jejich hranice
 database.rules.json   pravidla databáze (vkládají se ve Firebase konzoli)
 js/gps.js             sledování polohy telefonu
+js/heading.js         kam je hráč otočený (kompas, jinak směr chůze)
 js/firebase.js        napojení na server (Firebase): přihlášení a databáze
 js/geo.js             výpočty nad mapou (je hráč v území?)
 js/wakelock.js        drží displej rozsvícený

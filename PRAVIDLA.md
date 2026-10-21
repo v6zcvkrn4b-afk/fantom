@@ -23,7 +23,7 @@ Mapa se vybere automaticky podle polohy toho, kdo hru zakládá (mapa, ve které
 4. Celkem hra trvá 50 minut (5 minut náskok + 45 minut honičky).
 
 ## Co je vidět na mapě
-- **Vlastní poloha:** každý hráč vidí svou polohu vždy živě, bez ohledu na nastavení. Navíc vidí, kde ho naposledy viděli ostatní: Fantom své poslední dvě odhalené polohy, detektiv svou poslední odhalenou polohu.
+- **Vlastní poloha:** každý hráč vidí svou polohu vždy živě, bez ohledu na nastavení. U tečky je kužel, kterým směrem je hráč otočený (podle kompasu telefonu; na iPhonu se kompas zapne ťuknutím na ◎ nebo na Povolit polohu a telefon se zeptá na „pohyb a orientaci“). Bez kompasu se kužel ukazuje jen za chůze, podle směru pohybu. Navíc vidí, kde ho naposledy viděli ostatní: Fantom své poslední dvě odhalené polohy, detektiv svou poslední odhalenou polohu.
 - **Ostatní detektivové:** jen jejich poloha z posledního odhalení (podle nastavení, komu se ukazují).
 - **Fantom:** jeho poloha z posledního odhalení a z odhalení předtím, takže je vidět směr pohybu.
 - **Hranice herního území:** vyznačená na mapě.

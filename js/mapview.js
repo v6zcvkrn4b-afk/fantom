@@ -29,7 +29,11 @@ export function createMap(elementId, area) {
   // Živá poloha hráče leží nad značkami z odhalení, aby ji nic nezakrylo
   map.createPane('me');
   map.getPane('me').style.zIndex = 650;
+  // Kužel směru je pod tečkou, ale nad značkami
+  map.createPane('heading');
+  map.getPane('heading').style.zIndex = 640;
   let me = null;
+  let lastDeg = null;
 
   return {
     map,
@@ -44,10 +48,32 @@ export function createMap(elementId, area) {
       const color = isPhantom ? PHANTOM : DETECTIVE;
       // Jen tečka, bez kruhu přesnosti
       if (!me) {
-        me = { dot: L.circleMarker(pos, { pane: 'me', radius: 9, color: '#fff', weight: 3, fillColor: color, fillOpacity: 1 }).addTo(map) };
+        me = {
+          dot: L.circleMarker(pos, { pane: 'me', radius: 9, color: '#fff', weight: 3, fillColor: color, fillOpacity: 1 }).addTo(map),
+          cone: L.marker(pos, { pane: 'heading', icon: CONE, interactive: false, keyboard: false }).addTo(map),
+        };
+        me.cone.getElement().hidden = true;
       } else {
         me.dot.setLatLng(pos).setStyle({ fillColor: color });
+        me.cone.setLatLng(pos);
       }
+      me.cone.getElement().style.color = color;
+    },
+
+    // Kam je hráč otočený (stupně od severu), null = neznámo → kužel se schová
+    showHeading(deg) {
+      if (!me) return;
+      const el = me.cone.getElement();
+      if (deg === null) {
+        el.hidden = true;
+        lastDeg = null;
+        return;
+      }
+      el.hidden = false;
+      // Drobné zachvění kompasu nepřekreslovat
+      if (lastDeg !== null && Math.abs(((deg - lastDeg + 540) % 360) - 180) < 2) return;
+      lastDeg = deg;
+      el.firstChild.style.transform = `rotate(${deg}deg)`;
     },
 
     centerOnMe() {
@@ -78,6 +104,18 @@ export function createMap(elementId, area) {
     },
   };
 }
+
+// Kužel jako v Mapách Google: vějíř ±30° od tečky, ke kraji slábne. Barva podle role (currentColor).
+const CONE = L.divIcon({
+  className: '',
+  html: '<div class="heading"><svg viewBox="0 0 100 100" width="100" height="100">'
+    + '<defs><radialGradient id="heading-fade" cx="50" cy="50" r="48" gradientUnits="userSpaceOnUse">'
+    + '<stop offset="0" stop-color="currentColor" stop-opacity="0.7"/>'
+    + '<stop offset="1" stop-color="currentColor" stop-opacity="0"/></radialGradient></defs>'
+    + '<path d="M50 50 L26 8.4 A48 48 0 0 1 74 8.4 Z" fill="url(#heading-fade)"/></svg></div>',
+  iconSize: [100, 100],
+  iconAnchor: [50, 50],
+});
 
 function escapeHtml(text) {
   return String(text).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

@@ -6,6 +6,8 @@ const toFix = (p) => ({
   lat: p.coords.latitude,
   lng: p.coords.longitude,
   accuracy: p.coords.accuracy,
+  heading: p.coords.heading,   // směr pohybu (stupně od severu), jen když se hráč hýbe
+  speed: p.coords.speed,       // m/s
   time: p.timestamp,
 });
 
