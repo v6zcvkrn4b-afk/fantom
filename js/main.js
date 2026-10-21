@@ -28,7 +28,9 @@ const store = {
 
 // Mapa: před hrou podle polohy hráče (naposledy použitá, než se poloha zjistí),
 // ve hře podle toho, na jaké mapě byla hra založena.
-const startArea = getArea(new URLSearchParams(window.location.search).get('mapa') || store.get('map'));
+// Mapu jde vynutit v adrese, např. …/fantom/?mapa=brno (na prohlédnutí jiného města)
+const forcedMap = new URLSearchParams(window.location.search).get('mapa');
+const startArea = getArea(forcedMap || store.get('map'));
 const view = createMap('map', startArea);
 
 // Co je právě otevřené (krok úvodu, návod…), aby se po obnovení stránky ukázalo totéž.
@@ -254,20 +256,23 @@ setInterval(() => {
   if (state.game?.meta?.status === 'lobby') renderGpsBox();
 }, 5000);
 
-// Mapu jde vynutit v adrese, např. …/fantom/?mapa=brno (na prohlédnutí jiného města)
-const forcedMap = new URLSearchParams(window.location.search).get('mapa');
 
 function autoArea() {
   if (forcedMap) return getArea(forcedMap);
   return state.fix ? pickArea(state.fix.lat, state.fix.lng) : state.area;
 }
 
+// Úvodní text: město až podle zjištěné polohy (nebo vynucené mapy), do té doby obecně
+const GENERIC_TAGLINE = 'Dopadněte Fantoma v ulicích města.';
+
 function setArea(area) {
-  if (state.area === area && $('tagline').dataset.map === area.id) return;
+  const known = Boolean(state.fix || forcedMap);
+  const key = known ? area.id : 'generic';
+  if (state.area === area && $('tagline').dataset.map === key) return;
   state.area = area;
   view.setArea(area);
-  $('tagline').textContent = area.tagline;
-  $('tagline').dataset.map = area.id;
+  $('tagline').textContent = known ? area.tagline : GENERIC_TAGLINE;
+  $('tagline').dataset.map = key;
   updateGpsStatus();
 }
 
