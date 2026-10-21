@@ -263,7 +263,7 @@ function autoArea() {
 }
 
 // Úvodní text: město až podle zjištěné polohy (nebo vynucené mapy), do té doby obecně
-const GENERIC_TAGLINE = 'Dopadněte Fantoma v ulicích města.';
+const GENERIC_TAGLINE = 'Dopadněte Fantoma v ulicích vašeho města.';
 
 function setArea(area) {
   const known = Boolean(state.fix || forcedMap);
