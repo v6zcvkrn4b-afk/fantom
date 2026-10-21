@@ -22,14 +22,15 @@ if (IN_APP) {
   const isIos = /iPhone|iPad|iPod/.test(UA);
   const url = window.location.href;
   $('inapp').hidden = false;
+  // iPhone: aplikace jako Messenger odkaz do Safari blokují, tlačítko by nic neudělalo – jen návod
+  $('inapp-open').hidden = isIos;
+  $('inapp-hint').classList.toggle('small', !isIos);
   $('inapp-hint').textContent = isIos
-    ? 'Pokud tlačítko nefunguje: klikni vpravo nahoře na ⋯ (nebo ikonu sdílení) a vyber otevření v prohlížeči (Safari, Google, …).'
+    ? 'Klikni vpravo nahoře na ⋯ (nebo ikonu sdílení) a vyber otevření v prohlížeči (Safari, Google, …).'
     : 'Pokud tlačítko nefunguje: klikni vpravo nahoře na ⋮ a vyber otevření v prohlížeči (Google, Samsung Internet, …).';
   $('inapp-open').addEventListener('click', () => {
-    // iPhone: speciální adresa otevře Safari; Android: „intent“ otevře výchozí prohlížeč
-    window.location.href = isIos
-      ? `x-safari-${url}`
-      : `intent://${url.replace(/^https?:\/\//, '')}#Intent;scheme=https;end`;
+    // Android: „intent“ otevře výchozí prohlížeč
+    window.location.href = `intent://${url.replace(/^https?:\/\//, '')}#Intent;scheme=https;end`;
   });
   $('inapp-copy').addEventListener('click', async () => {
     try {
